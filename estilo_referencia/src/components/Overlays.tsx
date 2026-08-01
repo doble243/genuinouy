@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { allProducts, uy } from "../lib/data";
+import { uy } from "../lib/data";
 import { useStore } from "../lib/store";
 import { Arrow, Close, LogoWatermark, Minus, Plus, Search } from "./ui";
 
@@ -151,7 +151,7 @@ export function CartDrawer() {
 const SUGGEST = ["Air Jordan 1", "New Balance 574", "Retro running", "Ofertas"];
 
 export function SearchOverlay() {
-  const { searchOpen, setSearchOpen, add } = useStore();
+  const { searchOpen, setSearchOpen, add, allProducts } = useStore();
   const [q, setQ] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -175,7 +175,7 @@ export function SearchOverlay() {
         return true;
       })
       .slice(0, 6);
-  }, [q]);
+  }, [q, allProducts]);
 
   return (
     <div

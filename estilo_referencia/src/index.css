@@ -19,25 +19,23 @@
   --color-gold-600: #a8863a;
 }
 
-@layer base {
-  html {
-    -webkit-text-size-adjust: 100%;
-    scroll-behavior: smooth;
-  }
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
 
-  body {
-    background-color: var(--color-bone);
-    color: var(--color-ink);
-    font-family: var(--font-sans);
-    overflow-x: hidden;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-font-smoothing: antialiased;
-  }
+body {
+  background-color: var(--color-bone);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
 
-  ::selection {
-    background: var(--color-gold-500);
-    color: #000;
-  }
+::selection {
+  background: var(--color-gold-500);
+  color: #000;
 }
 
 @utility no-scrollbar {

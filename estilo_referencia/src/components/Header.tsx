@@ -26,10 +26,19 @@ export function Header() {
     <>
       {/* Barra superior fina */}
       <div className="bg-obsidian text-bone">
-        <div className="edge mx-auto flex h-8 max-w-[1600px] items-center justify-center gap-6 text-[10.5px] font-medium uppercase tracking-[0.18em]">
-          <span>Envíos a todo Uruguay</span>
-          <span className="hidden text-gold-500 sm:inline">·</span>
-          <span className="hidden sm:inline">Pagá en cuotas</span>
+        <div className="edge mx-auto flex h-8 max-w-[1600px] items-center justify-between text-[10.5px] font-medium uppercase tracking-[0.18em]">
+          <div className="flex items-center gap-6 mx-auto sm:mx-0">
+            <span>Envíos a todo Uruguay</span>
+            <span className="hidden text-gold-500 sm:inline">·</span>
+            <span className="hidden sm:inline">Pagá en cuotas</span>
+          </div>
+          <a
+            href="#admin"
+            className="hidden sm:flex items-center gap-1.5 text-gold-400 hover:text-gold-300 font-bold transition-colors"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-gold-400 animate-pulse" />
+            Panel Admin
+          </a>
         </div>
       </div>
 
@@ -168,6 +177,14 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
         </nav>
 
         <div className="mt-auto px-5 pb-8 text-[12px] leading-relaxed text-smoke">
+          <a
+            href="#admin"
+            onClick={onClose}
+            className="mb-4 inline-flex items-center gap-2 bg-obsidian text-gold-400 font-bold px-4 py-2.5 rounded-lg border border-gold-500/30 tracking-wider text-[11px] uppercase"
+          >
+            <span className="h-2 w-2 rounded-full bg-gold-400 animate-pulse" />
+            Panel Admin
+          </a>
           <p className="font-semibold text-ink">Atención directa</p>
           <p className="mt-1">WhatsApp · Instagram @genuinos.uy</p>
           <p className="mt-3">Envíos a todo Uruguay · Pagá en cuotas</p>

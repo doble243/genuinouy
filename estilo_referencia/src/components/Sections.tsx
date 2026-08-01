@@ -6,11 +6,10 @@ import {
   CAT_SHOES,
   EDITORIAL_IMG,
   HERO_IMG,
-  mostWanted,
-  newArrivals,
   retroRunning,
   uy,
 } from "../lib/data";
+import { useStore } from "../lib/store";
 import { ProductCard } from "./ProductCard";
 import { Arrow, Logo, LogoWatermark, Reveal, SectionHead } from "./ui";
 
@@ -133,6 +132,7 @@ export function Categories() {
 
 /* ======================= RECIÉN LLEGADOS ======================= */
 export function NewArrivals() {
+  const { newArrivals } = useStore();
   return (
     <section id="nuevos" className="py-4 md:py-6">
       <div className="edge mx-auto max-w-[1600px]">
@@ -272,6 +272,7 @@ export function Editorial() {
 
 /* ======================= LOS MÁS BUSCADOS ======================= */
 export function MostWanted() {
+  const { mostWanted } = useStore();
   return (
     <section id="ofertas" className="py-14 md:py-24">
       <div className="edge mx-auto max-w-[1600px]">

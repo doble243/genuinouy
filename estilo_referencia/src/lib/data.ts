@@ -10,6 +10,14 @@ export type Product = {
   hover: string;
   isNew?: boolean;
   sizes: string[];
+  inStock?: boolean;
+  category?: string;
+  gender?: string;
+  description?: string;
+  sku?: string;
+  availableQuantity?: number;
+  images?: string[];
+  featured?: boolean;
 };
 
 const px = (id: number, w = 900) =>
