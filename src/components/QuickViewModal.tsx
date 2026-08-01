@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, ChevronDown, ChevronUp, Ruler, Truck, ShieldCheck, ShoppingBag, MessageCircle, Check } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, ChevronDown, ChevronUp, Ruler, Truck, ShoppingBag, MessageCircle, Check } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useCatalog } from '../context/CatalogContext';
 import { createWhatsAppOrderUrl } from '../utils/whatsapp';
@@ -11,6 +11,7 @@ export const QuickViewModal: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<string>('');
   const [selectedSize, setSelectedSize] = useState<number | null>(null);
   const [sizeError, setSizeError] = useState<boolean>(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Accordion states
   const [openSection, setOpenSection] = useState<'details' | 'shipping' | null>(null);
@@ -25,8 +26,12 @@ export const QuickViewModal: React.FC = () => {
       setSelectedSize(null);
       setSizeError(false);
       setOpenSection(null);
+
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = 0;
+      }
     }
-  }, [quickViewProduct]);
+  }, [quickViewProduct?.id]);
 
   if (!quickViewProduct) return null;
 
@@ -103,7 +108,7 @@ export const QuickViewModal: React.FC = () => {
         </div>
 
         {/* Scrollable Content Container */}
-        <div className="overflow-y-auto p-6 space-y-6 pb-28">
+        <div ref={scrollContainerRef} className="overflow-y-auto p-6 space-y-6 pb-28">
           {/* Gallery */}
           <div className="space-y-3">
             <div className="relative aspect-square w-full bg-stone-100 rounded-2xl overflow-hidden flex items-center justify-center p-3 border border-stone-200">
@@ -246,18 +251,21 @@ export const QuickViewModal: React.FC = () => {
             </div>
           </div>
 
-          {/* Related Products */}
+          {/* Related Products Carousel */}
           {relatedProducts.length > 0 && (
             <div className="space-y-3 pt-2">
               <h4 className="text-xs font-extrabold uppercase tracking-widest text-stone-400">
-                Modelos relacionados
+                Modelos sugeridos
               </h4>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {relatedProducts.map((rel) => (
                   <div
                     key={rel.id}
-                    onClick={() => setQuickViewProduct(rel)}
-                    className="aspect-square bg-stone-100 rounded-xl overflow-hidden p-2 border border-stone-200 cursor-pointer hover:border-[#47624d] transition-all"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setQuickViewProduct(rel);
+                    }}
+                    className="aspect-square bg-stone-100 rounded-xl overflow-hidden p-2 border border-stone-200 cursor-pointer hover:border-[#47624d] transition-all hover:scale-105 active:scale-95"
                   >
                     <img
                       src={rel.images?.[0] || '/logo_genuinos.webp'}
