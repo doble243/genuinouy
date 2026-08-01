@@ -21,16 +21,17 @@ export const SizeGuideModal: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn"
       onClick={() => setShowSizeGuide(false)}
     >
       <div
-        className="relative w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5 text-gray-900"
+        className="relative w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5 text-stone-900 border border-stone-200"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={() => setShowSizeGuide(false)}
-          className="absolute top-4 right-4 p-2 rounded-full bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors"
+          className="absolute top-4 right-4 p-2 rounded-full bg-stone-100 text-stone-500 hover:text-stone-900 transition-colors cursor-pointer"
+          aria-label="Cerrar guía de talles"
         >
           <X className="w-5 h-5" />
         </button>
@@ -40,13 +41,13 @@ export const SizeGuideModal: React.FC = () => {
             <Ruler className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-xl font-extrabold font-serif-brand">Guía de Talles GENUINOS</h3>
-            <p className="text-xs text-gray-500 font-semibold">Equivalencias en talle EU, US y centímetros</p>
+            <h3 className="text-xl font-extrabold text-stone-900">Guía de Talles GENUINOS</h3>
+            <p className="text-xs text-stone-500 font-semibold">Equivalencias en talle EU, US y centímetros</p>
           </div>
         </div>
 
         {/* Size Table */}
-        <div className="overflow-hidden rounded-2xl border border-gray-200">
+        <div className="overflow-hidden rounded-2xl border border-stone-200">
           <table className="w-full text-center text-xs">
             <thead className="bg-[#1b3b2b] text-white font-bold uppercase tracking-wider">
               <tr>
@@ -55,9 +56,9 @@ export const SizeGuideModal: React.FC = () => {
                 <th className="py-2.5 px-3">Largo (CM)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 font-semibold text-gray-700">
+            <tbody className="divide-y divide-stone-100 font-semibold text-stone-700">
               {sizeTable.map((row) => (
-                <tr key={row.eu} className="hover:bg-gray-50">
+                <tr key={row.eu} className="hover:bg-stone-50">
                   <td className="py-2 px-3 font-extrabold text-[#1b3b2b]">{row.eu}</td>
                   <td className="py-2 px-3">{row.us}</td>
                   <td className="py-2 px-3">{row.cm} cm</td>
@@ -67,8 +68,8 @@ export const SizeGuideModal: React.FC = () => {
           </table>
         </div>
 
-        <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200 text-xs text-gray-600 space-y-1.5">
-          <p className="font-bold text-gray-900 flex items-center gap-1.5">
+        <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200 text-xs text-stone-600 space-y-1.5">
+          <p className="font-bold text-stone-900 flex items-center gap-1.5">
             <Check className="w-4 h-4 text-[#1b3b2b]" /> ¿Cómo medir tu pie?
           </p>
           <p>Colocá tu pie sobre una hoja de papel pegada al suelo, marcá el talón y el dedo más largo. Medí la distancia en cm y buscala en la tabla.</p>
@@ -76,7 +77,7 @@ export const SizeGuideModal: React.FC = () => {
 
         <button
           onClick={() => setShowSizeGuide(false)}
-          className="w-full btn-forest py-3 rounded-xl text-xs uppercase font-bold tracking-wider"
+          className="w-full bg-[#1b3b2b] hover:bg-[#12271c] text-white py-3.5 rounded-xl text-xs uppercase font-bold tracking-wider shadow-md cursor-pointer active:scale-95"
         >
           Entendido
         </button>
