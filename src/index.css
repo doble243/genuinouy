@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,89 +6,52 @@
 
 @layer base {
   body {
-    background-color: #faf8f3;
-    color: #1c1917;
+    background-color: #faf9f6;
+    color: #1a1a1a;
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
     -webkit-tap-highlight-color: transparent;
   }
-
-  h1, h2, h3, .font-serif-brand {
-    font-family: 'Playfair Display', Georgia, serif;
-  }
 }
 
 @layer utilities {
-  .bg-brand {
-    background-color: #47624d;
+  .bg-forest-brand {
+    background-color: #1b3b2b;
   }
 
-  .bg-brand-dark {
-    background-color: #35493a;
+  .text-forest-brand {
+    color: #1b3b2b;
   }
 
-  .bg-brand-light {
-    background-color: #6b8a72;
-  }
-
-  .bg-cream {
-    background-color: #faf8f3;
-  }
-
-  .text-brand {
-    color: #47624d;
-  }
-
-  .text-brand-dark {
-    color: #35493a;
-  }
-
-  .border-brand {
-    border-color: #47624d;
-  }
-
-  .btn-brand {
-    background-color: #47624d;
+  .btn-primary {
+    background-color: #1b3b2b;
     color: #ffffff;
-    font-weight: 700;
-    transition: all 0.2s ease-in-out;
-  }
-
-  .btn-brand:hover {
-    background-color: #35493a;
-    box-shadow: 0 4px 15px rgba(53, 73, 58, 0.3);
-  }
-
-  .btn-brand:active {
-    transform: scale(0.97);
-  }
-
-  .btn-amber {
-    background-color: #fbbf24;
-    color: #35493a;
     font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     transition: all 0.2s ease-in-out;
   }
 
-  .btn-amber:hover {
-    background-color: #f59e0b;
-    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+  .btn-primary:hover {
+    background-color: #12271c;
+    box-shadow: 0 4px 14px rgba(27, 59, 43, 0.2);
   }
 
-  .btn-amber:active {
+  .btn-primary:active {
     transform: scale(0.97);
   }
 
   .btn-whatsapp {
     background-color: #25d366;
     color: #ffffff;
-    font-weight: 700;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     transition: all 0.2s ease-in-out;
   }
 
   .btn-whatsapp:hover {
     background-color: #1eb956;
-    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
   }
 
   .btn-whatsapp:active {
@@ -98,19 +61,19 @@
 
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #faf8f3;
+  background: #faf9f6;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #d4d4d4;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #47624d;
+  background: #1b3b2b;
 }

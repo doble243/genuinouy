@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, MessageCircle, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCatalog } from '../context/CatalogContext';
 import { useCart } from '../context/CartContext';
 
@@ -27,144 +27,120 @@ export const HeroBanner: React.FC = () => {
   const currentImg = current.images?.[0] || '/fotos_productos/Adidas_Campus_1.jpg';
 
   return (
-    <section className="bg-[#47624d] text-white py-10 sm:py-16 relative overflow-hidden">
-      {/* Background Subtle Gradient Glow */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none" />
+    <section className="relative w-full h-[65vh] sm:h-[75vh] bg-[#0c1611] overflow-hidden">
+      {/* Full Bleed Background Image with Smooth Fade */}
+      <div className="absolute inset-0">
+        <img
+          key={current.id}
+          src={currentImg}
+          alt={current.name}
+          className="w-full h-full object-cover object-center transition-all duration-700 ease-out transform scale-105"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '/logo_genuinos.webp';
+          }}
+        />
+        {/* Integrated Dark Contrast Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0c1611] via-[#0c1611]/60 to-black/30" />
+      </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-        
-        {/* Left Column: Brand Statement & Quick Selector */}
-        <div className="lg:col-span-7 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#35493a] border border-white/20">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span className="text-[11px] font-extrabold uppercase tracking-widest text-amber-300">
-              Colección 2026 • Uruguay
-            </span>
+      {/* Hero Interactive Content */}
+      <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-between py-8 sm:py-12 z-20">
+        {/* Top Tagline */}
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-emerald-400 bg-black/40 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/10">
+            GENUINOS UY • COLECCIÓN AUTÉNTICA 2026
+          </span>
+
+          {/* Dots Indicator */}
+          <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+            {slides.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setActiveSlide(idx)}
+                className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                  activeSlide === idx ? 'w-6 bg-emerald-400' : 'w-1.5 bg-white/40'
+                }`}
+              />
+            ))}
           </div>
+        </div>
 
-          <h1 className="font-serif-brand text-4xl sm:text-6xl font-bold leading-tight tracking-tight">
-            GENUINOS<sup className="ml-1 text-2xl font-sans text-amber-300">UY</sup>
+        {/* Hero Central Content */}
+        <div className="space-y-4 max-w-2xl text-left">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight">
+            {current.name}
           </h1>
 
-          <p className="font-serif-brand text-2xl sm:text-3xl italic text-white/90">
-            Elegí tu estilo
+          <p className="text-sm sm:text-base text-gray-200 font-medium max-w-lg leading-relaxed">
+            {current.brand} • Calzado 100% auténtico importado en Uruguay. Stock inmediato en todas las tallas.
           </p>
 
-          <p className="text-sm sm:text-base text-white/80 max-w-lg font-normal leading-relaxed">
-            Championes 100% auténticos importados. Selección exclusiva de Adidas, Nike, Jordan, Puma, Vans y New Balance con envíos a todo Uruguay.
-          </p>
+          <div className="flex items-center gap-4 pt-2">
+            <span className="text-2xl sm:text-3xl font-black text-white">
+              ${current.price.toLocaleString('es-UY')} <span className="text-xs font-semibold text-gray-300">UYU</span>
+            </span>
 
-          {/* Featured Models Quick Switch Pills */}
-          <div className="pt-2">
-            <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/60 mb-2">
-              Modelos Destacados en Tendencia:
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {slides.map((slide, idx) => (
-                <button
-                  key={slide.id}
-                  onClick={() => setActiveSlide(idx)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                    activeSlide === idx
-                      ? 'bg-amber-400 text-[#35493a] font-extrabold shadow-md scale-105'
-                      : 'bg-[#35493a]/80 text-white/80 hover:text-white border border-white/20'
-                  }`}
-                >
-                  {slide.name.split(' ')[0]} {slide.name.split(' ')[1] || ''}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Action CTAs */}
-          <div className="pt-4 flex flex-wrap gap-3">
             <button
-              onClick={() => {
-                setActiveTab('catalog');
-                const grid = document.getElementById('catalog-grid');
-                grid?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="btn-amber px-8 py-3.5 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-xl cursor-pointer"
+              onClick={() => setQuickViewProduct(current)}
+              className="bg-white text-[#1b3b2b] px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest flex items-center gap-2 shadow-2xl hover:bg-gray-100 active:scale-95 transition-all cursor-pointer"
             >
-              <span>Ver catálogo completo</span>
+              <span>Ver talle y comprar</span>
               <ArrowRight className="w-4 h-4" />
             </button>
-
-            <a
-              href="https://wa.me/59891722213"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-6 py-3.5 rounded-full border border-white/40 text-white hover:bg-white/10 text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all"
-            >
-              <MessageCircle className="w-4 h-4 text-emerald-300" />
-              <span>WhatsApp +598 91 722 213</span>
-            </a>
           </div>
         </div>
 
-        {/* Right Column: High Impact Featured Sneaker Showcase Card */}
-        <div className="lg:col-span-5">
-          <div className="relative group">
-            <div
-              onClick={() => setQuickViewProduct(current)}
-              className="overflow-hidden rounded-3xl shadow-2xl bg-[#35493a] border-2 border-white/20 aspect-square relative cursor-pointer"
-            >
-              <img
-                key={current.id}
-                src={currentImg}
-                alt={current.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-all duration-700 ease-out"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/logo_genuinos.webp';
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-
-              {/* Prev / Next Slider Controls */}
+        {/* Bottom Interactive Sneaker Selector Pills */}
+        <div className="pt-4 border-t border-white/10 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+            <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest flex-shrink-0 hidden sm:inline">
+              Modelos Destacados:
+            </span>
+            {slides.map((slide, idx) => (
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
-                }}
-                className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/70 border border-white/20 transition-all z-20"
-                aria-label="Anterior"
+                key={slide.id}
+                onClick={() => setActiveSlide(idx)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex-shrink-0 ${
+                  activeSlide === idx
+                    ? 'bg-emerald-400 text-black font-extrabold shadow-lg scale-105'
+                    : 'bg-black/40 backdrop-blur-md text-white/80 hover:text-white border border-white/10'
+                }`}
               >
-                <ChevronLeft className="w-4 h-4" />
+                {slide.name}
               </button>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveSlide((prev) => (prev + 1) % slides.length);
-                }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/70 border border-white/20 transition-all z-20"
-                aria-label="Siguiente"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-
-              {/* Overlay Details Card */}
-              <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-stone-200 text-stone-900 flex items-center justify-between z-10">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-[#35493a]">
-                    {current.brand} • STOCK INMEDIATO
-                  </p>
-                  <p className="font-serif-brand text-base font-bold text-stone-900 line-clamp-1">
-                    {current.name}
-                  </p>
-                  <p className="text-xs font-black text-[#47624d]">
-                    ${current.price.toLocaleString('es-UY')} UYU
-                  </p>
-                </div>
-                <span className="px-3 py-1.5 bg-amber-400 text-[#35493a] font-black text-xs rounded-full shadow-sm flex-shrink-0">
-                  Talles {current.sizes[0]}-{current.sizes[current.sizes.length - 1]}
-                </span>
-              </div>
-            </div>
+            ))}
           </div>
-        </div>
 
+          <button
+            onClick={() => {
+              setActiveTab('catalog');
+              const grid = document.getElementById('catalog-grid');
+              grid?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:text-white uppercase tracking-wider cursor-pointer flex-shrink-0"
+          >
+            <span>Ver Catálogo Completo</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
+
+      {/* Prev / Next Slider Arrows */}
+      <button
+        onClick={() => setActiveSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1))}
+        className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 text-white hover:bg-black/70 backdrop-blur-md border border-white/10 hidden sm:flex cursor-pointer z-30"
+        aria-label="Anterior"
+      >
+        <ChevronLeft className="w-5 h-5" />
+      </button>
+
+      <button
+        onClick={() => setActiveSlide((prev) => (prev + 1) % slides.length)}
+        className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 text-white hover:bg-black/70 backdrop-blur-md border border-white/10 hidden sm:flex cursor-pointer z-30"
+        aria-label="Siguiente"
+      >
+        <ChevronRight className="w-5 h-5" />
+      </button>
     </section>
   );
 };

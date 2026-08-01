@@ -8,7 +8,7 @@ interface ProductCardProps {
   product: Product;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+export const ProductCard: React.FC = ({ product }) => {
   const { setQuickViewProduct } = useCart();
   const { isFavorite, toggleFavorite } = useCatalog();
 
@@ -18,14 +18,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [currentImg, setCurrentImg] = useState<string>(primaryImg);
   const favorited = isFavorite(product.id);
 
-  const hasOffer = product.price <= 2400;
-
   return (
     <div
       onClick={() => setQuickViewProduct(product)}
       onMouseEnter={() => setCurrentImg(secondaryImg)}
       onMouseLeave={() => setCurrentImg(primaryImg)}
-      className="group overflow-hidden rounded-2xl border border-[#47624d]/15 bg-white shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer flex flex-col justify-between relative"
+      className="bg-white rounded-2xl border border-stone-200 overflow-hidden flex flex-col group hover:shadow-lg hover:border-stone-300 transition-all duration-200 cursor-pointer relative"
     >
       {/* Heart Toggle */}
       <button
@@ -36,35 +34,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         className={`absolute top-3 right-3 z-20 p-2 rounded-full backdrop-blur-md transition-all active:scale-90 cursor-pointer shadow-sm ${
           favorited
             ? 'bg-red-500 text-white'
-            : 'bg-white/90 text-stone-400 hover:text-red-500 hover:bg-white border border-stone-200'
+            : 'bg-white/80 text-stone-400 hover:text-red-500 hover:bg-white border border-stone-200'
         }`}
         title={favorited ? 'Quitar de Favoritos' : 'Guardar en Favoritos'}
       >
         <Heart className={`w-4 h-4 ${favorited ? 'fill-white' : ''}`} />
       </button>
 
-      {/* Sneaker Photo Container */}
-      <div className="relative aspect-square overflow-hidden bg-stone-100 p-2 flex items-center justify-center">
+      {/* Sneaker Photography Container */}
+      <div className="relative aspect-square w-full bg-stone-100 p-2 flex items-center justify-center overflow-hidden">
         <img
           src={currentImg}
           alt={product.name}
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-105 rounded-xl"
-          loading="lazy"
+          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300 ease-out rounded-xl"
           onError={(e) => {
             (e.target as HTMLImageElement).src = '/logo_genuinos.webp';
           }}
+          loading="lazy"
         />
 
-        {/* Badges from estilo_de_referencia */}
-        {hasOffer ? (
-          <span className="absolute left-3 top-3 rounded-full bg-amber-400 px-3 py-1 text-[11px] font-black text-[#35493a] shadow-sm">
-            OFERTA 🔥
-          </span>
-        ) : (
-          <span className="absolute left-3 top-3 rounded-full bg-[#47624d] px-3 py-1 text-[11px] font-extrabold text-white uppercase tracking-wider shadow-sm">
+        {/* Brand Badge */}
+        <div className="absolute top-3 left-3 pointer-events-none">
+          <span className="bg-white/95 text-[#1b3b2b] text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-wider shadow-xs border border-stone-200">
             {product.brand}
           </span>
-        )}
+        </div>
 
         {/* Quick View Button on Hover */}
         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-4">
@@ -73,7 +67,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               e.stopPropagation();
               setQuickViewProduct(product);
             }}
-            className="bg-white text-[#35493a] px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-xl hover:bg-amber-400 active:scale-95 transition-all cursor-pointer"
+            className="bg-white text-[#1b3b2b] px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-md hover:bg-gray-100 active:scale-95 transition-all cursor-pointer"
           >
             <Eye className="w-4 h-4" />
             Vista Rápida
@@ -82,24 +76,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </div>
 
       {/* Card Details */}
-      <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
+      <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#47624d]/80">
+          <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest block mb-0.5">
             {product.category || product.brand}
-          </p>
-          <h3 className="mt-1 font-serif-brand text-lg font-bold text-stone-900 line-clamp-1 group-hover:text-[#47624d] transition-colors">
+          </span>
+          <h3 className="text-base font-extrabold text-stone-900 group-hover:text-[#1b3b2b] transition-colors line-clamp-1">
             {product.name}
           </h3>
+          <p className="text-[11px] text-stone-500 font-semibold mt-0.5">
+            Talles {product.sizes[0]} al {product.sizes[product.sizes.length - 1]}
+          </p>
         </div>
 
-        <div className="pt-2 border-t border-stone-100 flex items-center justify-between">
+        {/* Price & Action */}
+        <div className="pt-3 border-t border-stone-100 flex items-center justify-between">
           <div>
-            <span className="text-lg font-black text-[#47624d]">
+            <span className="text-[10px] text-stone-400 font-bold uppercase block">Precio</span>
+            <span className="text-lg font-black text-[#1b3b2b]">
               ${product.price.toLocaleString('es-UY')} <span className="text-xs font-semibold text-stone-500">UYU</span>
             </span>
-            <p className="text-[11px] text-stone-500 font-medium">
-              Talles {product.sizes[0]} al {product.sizes[product.sizes.length - 1]}
-            </p>
           </div>
 
           <button
@@ -107,10 +103,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               e.stopPropagation();
               setQuickViewProduct(product);
             }}
-            className="btn-brand p-2.5 rounded-xl text-xs font-bold flex items-center justify-center shadow-xs cursor-pointer active:scale-95"
-            title="Seleccionar talle"
+            className="bg-[#1b3b2b] text-white px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 hover:bg-[#12271c]"
           >
-            <ShoppingBag className="w-4 h-4" />
+            <ShoppingBag className="w-3.5 h-3.5" />
+            <span>Talles</span>
           </button>
         </div>
       </div>
