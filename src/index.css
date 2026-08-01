@@ -1,0 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #f8f9fa;
+    color: #111827;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1, h2, h3, .font-serif-brand {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+}
+
+@layer utilities {
+  .bg-forest-brand {
+    background-color: #1b3b2b;
+  }
+
+  .text-forest-brand {
+    color: #1b3b2b;
+  }
+
+  .border-forest-brand {
+    border-color: #1b3b2b;
+  }
+
+  .btn-forest {
+    background-color: #1b3b2b;
+    color: #ffffff;
+    font-weight: 700;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .btn-forest:hover {
+    background-color: #12271c;
+    box-shadow: 0 4px 14px rgba(27, 59, 43, 0.25);
+  }
+
+  .btn-forest:active {
+    transform: scale(0.97);
+  }
+
+  .btn-outline-forest {
+    background-color: transparent;
+    border: 2px solid #1b3b2b;
+    color: #1b3b2b;
+    font-weight: 700;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .btn-outline-forest:hover {
+    background-color: #1b3b2b;
+    color: #ffffff;
+  }
+
+  .btn-whatsapp {
+    background-color: #25d366;
+    color: #ffffff;
+    font-weight: 700;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .btn-whatsapp:hover {
+    background-color: #1eb956;
+    box-shadow: 0 4px 14px rgba(37, 211, 102, 0.3);
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f8f9fa;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1b3b2b;
+}
