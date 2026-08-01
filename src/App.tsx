@@ -6,6 +6,7 @@ import { HeroBanner } from './components/HeroBanner';
 import { FilterBar } from './components/FilterBar';
 import { VisualCategoryBar } from './components/VisualCategoryBar';
 import { ProductGrid } from './components/ProductGrid';
+import { HomeSections } from './components/HomeSections';
 import { FavoritesView } from './components/FavoritesView';
 import { ProfileView } from './components/ProfileView';
 import { QuickViewModal } from './components/QuickViewModal';
@@ -20,7 +21,7 @@ const AppContent: React.FC = () => {
   const { activeTab } = useCatalog();
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col selection:bg-[#1b3b2b] selection:text-white pb-16 md:pb-0">
+    <div className="min-h-screen bg-[#faf8f3] text-stone-900 flex flex-col selection:bg-[#47624d] selection:text-white pb-16 md:pb-0">
       <SplashScreen />
       <Toast />
       <SizeGuideModal />
@@ -33,6 +34,7 @@ const AppContent: React.FC = () => {
           <VisualCategoryBar />
           <main className="flex-1">
             <ProductGrid />
+            <HomeSections />
           </main>
         </>
       )}
