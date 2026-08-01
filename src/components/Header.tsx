@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, ShoppingBag, X, ArrowRight } from 'lucide-react';
+import { Search, ShoppingBag, Heart, X, ArrowRight, Menu } from 'lucide-react';
 import { useCatalog } from '../context/CatalogContext';
 import { useCart } from '../context/CartContext';
 import { Product } from '../types';
 
 export const Header: React.FC = () => {
-  const { products, filterState, setSearchQuery, setActiveTab } = useCatalog();
+  const { products, filterState, setSearchQuery, setActiveTab, setSelectedCategory, setSelectedBrand, favorites } = useCatalog();
   const { cartCount, setIsCartOpen, setQuickViewProduct } = useCart();
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
   const query = filterState.searchQuery.trim().toLowerCase();
@@ -23,7 +24,6 @@ export const Header: React.FC = () => {
       }).slice(0, 5)
     : [];
 
-  // Close search dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
@@ -39,11 +39,19 @@ export const Header: React.FC = () => {
     setShowDropdown(false);
   };
 
+  const navItems = [
+    { label: 'Nuevos', action: () => { setSelectedCategory('Todas'); setSelectedBrand('Todos'); setActiveTab('catalog'); } },
+    { label: 'Championes', action: () => { setSelectedCategory('Championes'); setSelectedBrand('Todos'); setActiveTab('catalog'); } },
+    { label: 'Ropa', action: () => { setSelectedCategory('Ropa'); setSelectedBrand('Todos'); setActiveTab('catalog'); } },
+    { label: 'Marcas', action: () => { const el = document.getElementById('marcas-section'); el?.scrollIntoView({ behavior: 'smooth' }); } },
+    { label: 'Ofertas', action: () => { setSelectedCategory('Ofertas'); setSelectedBrand('Todos'); setActiveTab('catalog'); } },
+  ];
+
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-stone-200 shadow-xs">
       {/* Top Banner Ticker */}
       <div className="bg-[#1b3b2b] text-white text-[11px] font-bold uppercase tracking-widest py-2 px-4 text-center">
-        <span>ENVÍOS A TODO EL PAÍS EN EL DÍA</span>
+        <span>ENVÍOS A TODO URUGUAY · PAGÁ EN HASTA 6 CUOTAS</span>
       </div>
 
       {/* Main Header Container */}
@@ -66,6 +74,19 @@ export const Header: React.FC = () => {
             }}
           />
         </div>
+
+        {/* Desktop Navigation Links */}
+        <nav className="hidden lg:flex items-center gap-8">
+          {navItems.map((item) => (
+            <button
+              key={item.label}
+              onClick={item.action}
+              className="text-xs font-black uppercase tracking-wider text-stone-700 hover:text-[#1b3b2b] transition-colors cursor-pointer"
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
 
         {/* Instant Live Search Input & Dropdown */}
         <div ref={searchRef} className="flex-1 max-w-xs sm:max-w-md relative">
@@ -150,23 +171,64 @@ export const Header: React.FC = () => {
           )}
         </div>
 
-        {/* Cart Trigger Button */}
-        <button
-          onClick={() => setIsCartOpen(true)}
-          className="relative flex items-center gap-2 px-4 py-2 rounded-full bg-[#1b3b2b] text-white hover:bg-[#12271c] transition-all cursor-pointer shadow-sm active:scale-95 flex-shrink-0"
-          aria-label="Ver Carrito de Compras"
-        >
-          <ShoppingBag className="w-4 h-4" />
-          <span className="hidden sm:inline text-xs font-black uppercase tracking-wider">
-            Bolsa
-          </span>
-          {cartCount > 0 && (
-            <span className="flex items-center justify-center min-w-5 h-5 px-1.5 text-[11px] font-black bg-white text-[#1b3b2b] rounded-full shadow">
-              {cartCount}
+        {/* Right Actions: Favorites & Cart */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setActiveTab('favorites')}
+            className="relative p-2 text-stone-600 hover:text-[#1b3b2b] transition-colors cursor-pointer hidden sm:block"
+            title="Favoritos"
+          >
+            <Heart className="w-5 h-5" />
+            {favorites.length > 0 && (
+              <span className="absolute top-0 right-0 w-4 h-4 text-[10px] font-black bg-red-500 text-white rounded-full flex items-center justify-center">
+                {favorites.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setIsCartOpen(true)}
+            className="relative flex items-center gap-2 px-4 py-2 rounded-full bg-[#1b3b2b] text-white hover:bg-[#12271c] transition-all cursor-pointer shadow-sm active:scale-95 flex-shrink-0"
+            aria-label="Ver Carrito de Compras"
+          >
+            <ShoppingBag className="w-4 h-4" />
+            <span className="hidden sm:inline text-xs font-black uppercase tracking-wider">
+              Bolsa
             </span>
-          )}
-        </button>
+            {cartCount > 0 && (
+              <span className="flex items-center justify-center min-w-5 h-5 px-1.5 text-[11px] font-black bg-white text-[#1b3b2b] rounded-full shadow">
+                {cartCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden p-2 text-stone-700 hover:text-[#1b3b2b] cursor-pointer"
+            aria-label="Menú de Navegación"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+        </div>
       </div>
+
+      {/* Mobile Drawer Menu */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden bg-white border-t border-stone-200 px-4 py-3 space-y-2 animate-fadeIn">
+          {navItems.map((item) => (
+            <button
+              key={item.label}
+              onClick={() => {
+                item.action();
+                setMobileMenuOpen(false);
+              }}
+              className="block w-full text-left py-2 text-xs font-black uppercase tracking-wider text-stone-800 hover:text-[#1b3b2b]"
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      )}
     </header>
   );
 };
