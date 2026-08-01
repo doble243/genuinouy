@@ -43,7 +43,7 @@ export const Header: React.FC = () => {
     <header className="sticky top-0 z-40 bg-white border-b border-stone-200 shadow-xs">
       {/* Top Banner Ticker */}
       <div className="bg-[#1b3b2b] text-white text-[11px] font-bold uppercase tracking-widest py-2 px-4 text-center">
-        <span>GENUINOS UY • ENVÍOS A TODO EL PAÍS EN EL DÍA • WHATSAPP +598 91 722 213</span>
+        <span>ENVÍOS A TODO EL PAÍS EN EL DÍA</span>
       </div>
 
       {/* Main Header Container */}
