@@ -1,82 +1,81 @@
-import React from 'react';
-import { CatalogProvider, useCatalog } from './context/CatalogContext';
-import { CartProvider } from './context/CartContext';
-import { Header } from './components/Header';
-import { HeroBanner } from './components/HeroBanner';
-import { FilterBar } from './components/FilterBar';
-import { VisualCategoryBar } from './components/VisualCategoryBar';
-import { ProductGrid } from './components/ProductGrid';
-import { HomeSections } from './components/HomeSections';
-import { FavoritesView } from './components/FavoritesView';
-import { ProfileView } from './components/ProfileView';
-import { QuickViewModal } from './components/QuickViewModal';
-import { CartDrawer } from './components/CartDrawer';
-import { Footer } from './components/Footer';
-import { MobileBottomNav } from './components/MobileBottomNav';
-import { SplashScreen } from './components/SplashScreen';
-import { Toast } from './components/Toast';
-import { SizeGuideModal } from './components/SizeGuideModal';
+import { useEffect, useState } from "react";
+import { Header } from "./components/Header";
+import { CartDrawer, SearchOverlay } from "./components/Overlays";
+import {
+  Brands,
+  Categories,
+  Editorial,
+  Footer,
+  Hero,
+  MostWanted,
+  NewArrivals,
+  Trust,
+} from "./components/Sections";
+import { AllProducts } from "./components/AllProducts";
+import { ProductDetail } from "./components/ProductDetail";
+import { AdminPanel } from "./components/admin/AdminPanel";
+import { StoreProvider } from "./lib/store";
 
-const AppContent: React.FC = () => {
-  const { activeTab } = useCatalog();
+export default function App() {
+  const [isAdmin, setIsAdmin] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return (
+      window.location.hash === "#admin" ||
+      window.location.search.includes("admin=true") ||
+      window.location.pathname.startsWith("/admin")
+    );
+  });
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setIsAdmin(
+        window.location.hash === "#admin" ||
+        window.location.search.includes("admin=true") ||
+        window.location.pathname.startsWith("/admin")
+      );
+    };
+
+    window.addEventListener("hashchange", handleLocationChange);
+    window.addEventListener("popstate", handleLocationChange);
+    return () => {
+      window.removeEventListener("hashchange", handleLocationChange);
+      window.removeEventListener("popstate", handleLocationChange);
+    };
+  }, []);
+
+  const handleExitAdmin = () => {
+    if (window.location.hash === "#admin") {
+      window.location.hash = "";
+    } else {
+      window.history.pushState({}, "", "/");
+    }
+    setIsAdmin(false);
+  };
 
   return (
-    <div className="min-h-screen bg-[#faf8f3] text-stone-900 flex flex-col selection:bg-[#47624d] selection:text-white pb-16 md:pb-0">
-      <SplashScreen />
-      <Toast />
-      <SizeGuideModal />
-
-      <Header />
-
-      {activeTab === 'home' && (
-        <>
-          <HeroBanner />
-          <VisualCategoryBar />
-          <main className="flex-1">
-            <ProductGrid />
-            <HomeSections />
+    <StoreProvider>
+      {isAdmin ? (
+        <AdminPanel onExitAdmin={handleExitAdmin} />
+      ) : (
+        <div className="min-h-screen bg-bone">
+          <Header />
+          <main>
+            <Hero />
+            <Categories />
+            <AllProducts />
+            <NewArrivals />
+            <div className="h-10 md:h-16" />
+            <Brands />
+            <Editorial />
+            <MostWanted />
+            <Trust />
           </main>
-        </>
+          <Footer />
+          <CartDrawer />
+          <SearchOverlay />
+          <ProductDetail />
+        </div>
       )}
-
-      {activeTab === 'catalog' && (
-        <>
-          <FilterBar />
-          <VisualCategoryBar />
-          <main className="flex-1">
-            <ProductGrid />
-          </main>
-        </>
-      )}
-
-      {activeTab === 'favorites' && (
-        <main className="flex-1">
-          <FavoritesView />
-        </main>
-      )}
-
-      {activeTab === 'profile' && (
-        <main className="flex-1">
-          <ProfileView />
-        </main>
-      )}
-
-      <QuickViewModal />
-      <CartDrawer />
-      <Footer />
-      <MobileBottomNav />
-    </div>
+    </StoreProvider>
   );
-};
-
-export const App: React.FC = () => {
-  return (
-    <CatalogProvider>
-      <CartProvider>
-        <AppContent />
-      </CartProvider>
-    </CatalogProvider>
-  );
-};
-
-export default App;
+}
