@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
 import { Product, FilterState, VisualCategory, AppTab } from '../types';
 import productsData from '../data/products.json';
+import { supabase } from '../lib/supabase';
 
 interface CatalogContextType {
   products: Product[];
@@ -45,12 +46,42 @@ const initialFilterState: FilterState = {
 };
 
 export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const products: Product[] = productsData as Product[];
+  const [products, setProducts] = useState<Product[]>(productsData as Product[]);
   const [filterState, setFilterState] = useState<FilterState>(initialFilterState);
   const [activeTab, setActiveTab] = useState<AppTab>('home');
   const [showSplash, setShowSplash] = useState<boolean>(true);
   const [showSizeGuide, setShowSizeGuide] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Fetch live products from Supabase
+  useEffect(() => {
+    async function loadSupabaseProducts() {
+      try {
+        const { data, error } = await supabase.from('products').select('*');
+        if (!error && data && data.length > 0) {
+          const formatted: Product[] = data.map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            brand: item.brand,
+            category: item.category,
+            gender: item.gender,
+            price: Number(item.price),
+            description: item.description,
+            sku: item.sku,
+            inStock: item.in_stock,
+            availableQuantity: item.available_quantity,
+            sizes: item.sizes || [],
+            images: item.images || [],
+            featured: item.featured,
+          }));
+          setProducts(formatted);
+        }
+      } catch (err) {
+        console.warn('Using local catalog fallback:', err);
+      }
+    }
+    loadSupabaseProducts();
+  }, []);
 
   // Load initial favorites from localStorage
   const [favorites, setFavorites] = useState<string[]>(() => {
@@ -236,7 +267,7 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (filterState.sortBy === 'name-asc') {
         return a.name.localeCompare(b.name);
       }
-      return 0; // featured / default
+      return 0;
     });
   }, [products, filterState]);
 
