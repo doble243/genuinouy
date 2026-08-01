@@ -1,39 +1,32 @@
 import React from 'react';
-import { PackageSearch, RefreshCw } from 'lucide-react';
-import { ProductCard } from './ProductCard';
 import { useCatalog } from '../context/CatalogContext';
+import { ProductCard } from './ProductCard';
+import { SearchX } from 'lucide-react';
 
 export const ProductGrid: React.FC = () => {
   const { filteredProducts, resetFilters } = useCatalog();
 
-  if (filteredProducts.length === 0) {
-    return (
-      <div id="catalog-grid" className="max-w-7xl mx-auto px-4 py-24 text-center">
-        <div className="max-w-md mx-auto p-10 rounded-2xl glass-card border border-zinc-800">
-          <PackageSearch className="w-14 h-14 text-amber-400 mx-auto mb-4 animate-bounce" />
-          <h3 className="text-2xl font-black uppercase text-white mb-2 font-display">Sin Resultados</h3>
-          <p className="text-xs text-zinc-400 mb-6">
-            No encontramos zapatillas que coincidan con la búsqueda o marca seleccionada. Intenta ajustar los criterios.
-          </p>
+  return (
+    <section id="catalog-grid" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {filteredProducts.length === 0 ? (
+        <div className="py-20 text-center space-y-4 max-w-sm mx-auto">
+          <SearchX className="w-12 h-12 text-gray-600 mx-auto" />
+          <h3 className="text-lg font-bold text-white">No encontramos ese modelo</h3>
+          <p className="text-xs text-gray-400">Proba buscando por marca como Nike, Adidas o Jordan.</p>
           <button
             onClick={resetFilters}
-            className="gold-gradient-btn px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest inline-flex items-center gap-2 cursor-pointer shadow-xl"
+            className="btn-dark-primary px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider cursor-pointer"
           >
-            <RefreshCw className="w-4 h-4" />
-            Restablecer Filtros
+            Ver todos los championes
           </button>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div id="catalog-grid" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">
-        {filteredProducts.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
-    </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+          {filteredProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
+    </section>
   );
 };

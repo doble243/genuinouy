@@ -1,74 +1,98 @@
-import React from 'react';
-import { ShieldCheck, Truck, MessageCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { useCart } from '../context/CartContext';
 import { useCatalog } from '../context/CatalogContext';
 
 export const HeroBanner: React.FC = () => {
-  const { setSelectedBrand } = useCatalog();
+  const { products } = useCatalog();
+  const { setQuickViewProduct } = useCart();
+  const [activeIndex, setActiveIndex] = useState<number>(0);
 
-  const brands = [
-    'Adidas', 'Nike', 'Converse', 'Puma', 'Vans', 'New Balance', 'Louis Vuitton', 'Calzado Kids'
-  ];
+  const featuredProducts = products.filter(
+    (p) => p.name.includes('Campus') || p.name.includes('Air') || p.name.includes('Samba')
+  ).slice(0, 3);
+
+  const slides = featuredProducts.length > 0 ? featuredProducts : products.slice(0, 3);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [slides.length]);
+
+  const currentSlide = slides[activeIndex];
+  if (!currentSlide) return null;
+
+  const primaryImg = currentSlide.images?.[0] || '/logo_genuinos.webp';
 
   return (
-    <section className="bg-white border-b border-gray-200 py-8 sm:py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-        
-        {/* Slogan Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-200">
-          <span className="text-xs font-bold uppercase tracking-widest text-[#1b3b2b]">
-            GENUINOS UY • ELEGÍ TU ESTILO
-          </span>
-        </div>
+    <section className="relative w-full h-[72vh] sm:h-[80vh] bg-[#050608] overflow-hidden">
+      {/* Editorial Background Image */}
+      <div className="absolute inset-0">
+        <img
+          src={primaryImg}
+          alt={currentSlide.name}
+          className="w-full h-full object-cover object-center transition-all duration-700 ease-out transform scale-105"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '/logo_genuinos.webp';
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0c0e] via-[#0a0c0e]/30 to-transparent" />
+      </div>
 
-        {/* Headline */}
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight">
-          Calzado Auténtico en <span className="text-[#1b3b2b]">Uruguay</span>
+      {/* Carousel Dots / Controls */}
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+        {slides.map((_, idx) => (
+          <button
+            key={idx}
+            onClick={() => setActiveIndex(idx)}
+            className={`h-1.5 rounded-full transition-all cursor-pointer ${
+              activeIndex === idx ? 'w-6 bg-emerald-400' : 'w-1.5 bg-white/40'
+            }`}
+          />
+        ))}
+      </div>
+
+      {/* Hero Bottom Details & CTA */}
+      <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 z-20 flex flex-col items-start space-y-3 max-w-7xl mx-auto">
+        <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400 bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-800/60">
+          DESTACADO • {currentSlide.brand}
+        </span>
+
+        <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight font-serif-brand leading-none">
+          {currentSlide.name}
         </h1>
 
-        {/* Subtitle */}
-        <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto font-normal leading-relaxed">
-          Catálogo exclusivo con stock de Adidas, Nike, Jordan, Puma, Vans, Converse y más. Pedidos fáciles y entrega directa a todo el país vía WhatsApp.
-        </p>
+        <div className="flex items-center gap-4 pt-1">
+          <span className="text-xl sm:text-2xl font-black text-white">
+            ${currentSlide.price.toLocaleString('es-UY')} <span className="text-xs font-normal text-gray-400">UYU</span>
+          </span>
 
-        {/* Value Highlights */}
-        <div className="flex flex-wrap justify-center gap-4 text-xs font-bold text-gray-700 pt-2">
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-gray-50 border border-gray-200">
-            <ShieldCheck className="w-4 h-4 text-[#1b3b2b]" />
-            <span>100% Auténticos</span>
-          </div>
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-gray-50 border border-gray-200">
-            <Truck className="w-4 h-4 text-[#1b3b2b]" />
-            <span>Envíos Nacionales</span>
-          </div>
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-gray-50 border border-gray-200">
-            <MessageCircle className="w-4 h-4 text-[#1b3b2b]" />
-            <span>WhatsApp +598 91 722 213</span>
-          </div>
+          <button
+            onClick={() => setQuickViewProduct(currentSlide)}
+            className="btn-dark-primary px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-2xl cursor-pointer"
+          >
+            <span>Ver modelos</span>
+            <ArrowRight className="w-4 h-4 text-black" />
+          </button>
         </div>
-
-        {/* Brand Selector Buttons */}
-        <div className="pt-6 border-t border-gray-100">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-3">
-            Filtrar por Marca
-          </p>
-          <div className="flex flex-wrap justify-center gap-2">
-            {brands.map((brand) => (
-              <button
-                key={brand}
-                onClick={() => {
-                  setSelectedBrand(brand);
-                  const grid = document.getElementById('catalog-grid');
-                  grid?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="px-3.5 py-1.5 rounded-full text-xs font-bold text-gray-700 bg-gray-100 hover:bg-[#1b3b2b] hover:text-white transition-all cursor-pointer border border-gray-200 active:scale-95"
-              >
-                {brand}
-              </button>
-            ))}
-          </div>
-        </div>
-
       </div>
+
+      {/* Prev / Next Controls */}
+      <button
+        onClick={() => setActiveIndex((prev) => (prev === 0 ? slides.length - 1 : prev - 1))}
+        className="absolute left-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/40 text-white/80 hover:text-white backdrop-blur-md border border-white/10 hidden sm:flex cursor-pointer"
+      >
+        <ChevronLeft className="w-5 h-5" />
+      </button>
+
+      <button
+        onClick={() => setActiveIndex((prev) => (prev + 1) % slides.length)}
+        className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/40 text-white/80 hover:text-white backdrop-blur-md border border-white/10 hidden sm:flex cursor-pointer"
+      >
+        <ChevronRight className="w-5 h-5" />
+      </button>
     </section>
   );
 };

@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { X, ShoppingBag, AlertCircle, Plus, Minus, Check, MessageCircle, Ruler, Truck, ShieldCheck } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Ruler, Truck, ShieldCheck, ShoppingBag, MessageCircle } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useCatalog } from '../context/CatalogContext';
 import { createWhatsAppOrderUrl } from '../utils/whatsapp';
 
 export const QuickViewModal: React.FC = () => {
   const { quickViewProduct, setQuickViewProduct, addToCart, setIsCartOpen } = useCart();
-  const { setShowSizeGuide, showToast } = useCatalog();
+  const { products, setShowSizeGuide, showToast } = useCatalog();
 
   const [selectedImage, setSelectedImage] = useState<string>('');
   const [selectedSize, setSelectedSize] = useState<number | null>(null);
-  const [quantity, setQuantity] = useState<number>(1);
   const [sizeError, setSizeError] = useState<boolean>(false);
+
+  // Accordion states
+  const [openSection, setOpenSection] = useState<'details' | 'shipping' | null>(null);
 
   useEffect(() => {
     if (quickViewProduct) {
@@ -21,8 +23,8 @@ export const QuickViewModal: React.FC = () => {
           : '/logo_genuinos.webp';
       setSelectedImage(initialImg);
       setSelectedSize(null);
-      setQuantity(1);
       setSizeError(false);
+      setOpenSection(null);
     }
   }, [quickViewProduct]);
 
@@ -34,8 +36,8 @@ export const QuickViewModal: React.FC = () => {
       return;
     }
     setSizeError(false);
-    addToCart(quickViewProduct, selectedSize, quantity);
-    showToast(`Sumado a la Bolsa (Talle ${selectedSize}) 🛍️`);
+    addToCart(quickViewProduct, selectedSize, 1);
+    showToast(`Sumado a la bolsa (Talle ${selectedSize}) 🛍️`);
     setQuickViewProduct(null);
     setIsCartOpen(true);
   };
@@ -50,7 +52,7 @@ export const QuickViewModal: React.FC = () => {
         id: `${quickViewProduct.id}-${selectedSize}`,
         product: quickViewProduct,
         selectedSize,
-        quantity,
+        quantity: 1,
       },
     ];
     const url = createWhatsAppOrderUrl(singleItemCart, { name: '', address: '', notes: '' });
@@ -67,189 +69,212 @@ export const QuickViewModal: React.FC = () => {
 
   const cuotaAmount = Math.round(quickViewProduct.price / 6);
 
+  // Related products
+  const relatedProducts = products
+    .filter((p) => p.id !== quickViewProduct.id && (p.brand === quickViewProduct.brand || p.gender === quickViewProduct.gender))
+    .slice(0, 4);
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity animate-fadeIn"
+      className="fixed inset-0 z-50 bg-[#050608]/95 backdrop-blur-md flex flex-col justify-between overflow-y-auto animate-fadeIn"
       onClick={() => setQuickViewProduct(null)}
     >
-      <div
-        className="relative w-full max-w-4xl bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col md:flex-row"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close Button */}
+      {/* Top Bar */}
+      <div className="sticky top-0 z-30 bg-[#0a0c0e]/90 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-white/10">
+        <span className="text-xs font-black uppercase tracking-widest text-emerald-400">
+          {quickViewProduct.brand}
+        </span>
         <button
           onClick={() => setQuickViewProduct(null)}
-          className="absolute top-4 right-4 z-20 p-2.5 rounded-full bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200 transition-colors cursor-pointer"
-          aria-label="Cerrar ventana"
+          className="p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors cursor-pointer"
+          aria-label="Cerrar"
         >
           <X className="w-5 h-5" />
         </button>
+      </div>
 
-        {/* Left Side: Product Gallery */}
-        <div className="w-full md:w-1/2 p-6 bg-gray-50 flex flex-col justify-between items-center gap-4 border-b md:border-b-0 md:border-r border-gray-200">
-          <div className="relative w-full aspect-square bg-white rounded-2xl overflow-hidden border border-gray-200 flex items-center justify-center p-2">
+      {/* Main Content Container */}
+      <div
+        className="max-w-3xl mx-auto w-full px-4 sm:px-6 py-6 space-y-8 pb-32"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Large Product Gallery */}
+        <div className="space-y-3">
+          <div className="relative aspect-square w-full bg-[#121518] rounded-3xl overflow-hidden flex items-center justify-center p-4 border border-white/10 shadow-2xl">
             <img
               src={selectedImage}
               alt={quickViewProduct.name}
-              className="w-full h-full object-cover object-center rounded-xl"
+              className="w-full h-full object-cover object-center rounded-2xl"
               onError={() => setSelectedImage('/logo_genuinos.webp')}
             />
           </div>
 
-          {/* Thumbnails */}
+          {/* Gallery Thumbnails */}
           {images.length > 1 && (
-            <div className="flex items-center gap-2 overflow-x-auto w-full max-w-full pb-1 no-scrollbar justify-start sm:justify-center">
-              {images.map((img, idx) => {
-                const isSelected = selectedImage === img;
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => setSelectedImage(img)}
-                    className={`w-14 h-14 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all cursor-pointer ${
-                      isSelected
-                        ? 'border-[#1b3b2b] ring-2 ring-[#1b3b2b]/20 scale-105'
-                        : 'border-gray-200 opacity-70 hover:opacity-100'
-                    }`}
-                  >
-                    <img
-                      src={img}
-                      alt={`${quickViewProduct.name} vista ${idx + 1}`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/logo_genuinos.webp';
-                      }}
-                    />
-                  </button>
-                );
-              })}
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar justify-center">
+              {images.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setSelectedImage(img)}
+                  className={`w-16 h-16 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
+                    selectedImage === img ? 'border-emerald-400 scale-105' : 'border-white/10 opacity-60'
+                  }`}
+                >
+                  <img
+                    src={img}
+                    alt={`${quickViewProduct.name} ${idx + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
             </div>
           )}
         </div>
 
-        {/* Right Side: Product Details & Sticky Actions */}
-        <div className="w-full md:w-1/2 p-6 sm:p-8 flex flex-col justify-between space-y-6 overflow-y-auto bg-white">
+        {/* Product Details Header */}
+        <div className="space-y-2 text-left">
+          <h1 className="text-3xl font-black text-white tracking-tight font-serif-brand">
+            {quickViewProduct.name}
+          </h1>
+
+          <div className="flex items-baseline gap-3">
+            <span className="text-3xl font-black text-white">
+              ${quickViewProduct.price.toLocaleString('es-UY')} <span className="text-xs text-gray-400 font-normal">UYU</span>
+            </span>
+            <span className="text-xs text-emerald-400 font-bold">
+              6 cuotas de ${cuotaAmount.toLocaleString('es-UY')}
+            </span>
+          </div>
+        </div>
+
+        {/* Visual Size Selector */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-gray-300">
+              Elegí tu talle (EU)
+            </span>
+            <button
+              onClick={() => setShowSizeGuide(true)}
+              className="text-xs text-emerald-400 font-bold underline flex items-center gap-1 cursor-pointer"
+            >
+              <Ruler className="w-3.5 h-3.5" />
+              Guía de talles
+            </button>
+          </div>
+
+          <div className="grid grid-cols-5 gap-2">
+            {sizes.map((size) => {
+              const isSelected = selectedSize === size;
+              return (
+                <button
+                  key={size}
+                  onClick={() => {
+                    setSelectedSize(size);
+                    setSizeError(false);
+                  }}
+                  className={`py-3 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-white text-black shadow-lg scale-105'
+                      : 'bg-[#14171c] text-gray-200 hover:bg-[#1f242b] border border-white/10'
+                  }`}
+                >
+                  {size}
+                </button>
+              );
+            })}
+          </div>
+
+          {sizeError && (
+            <p className="text-xs font-bold text-red-400 pt-1">
+              * Por favor elegí un talle antes de agregar al carrito
+            </p>
+          )}
+        </div>
+
+        {/* Accordions */}
+        <div className="border-t border-b border-white/10 divide-y divide-white/10 text-xs">
+          {/* Details Accordion */}
           <div>
-            {/* Brand & Stock Badges */}
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <span className="text-xs font-black uppercase tracking-widest text-[#1b3b2b] bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                {quickViewProduct.brand}
-              </span>
-              <span className="text-xs text-emerald-700 font-bold flex items-center gap-1">
-                <Check className="w-3.5 h-3.5" /> Stock Inmediato
-              </span>
-            </div>
+            <button
+              onClick={() => setOpenSection(openSection === 'details' ? null : 'details')}
+              className="w-full py-4 flex items-center justify-between text-left font-bold text-gray-200 cursor-pointer"
+            >
+              <span>Detalles del modelo</span>
+              {openSection === 'details' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+            {openSection === 'details' && (
+              <div className="pb-4 text-gray-400 leading-relaxed">
+                {quickViewProduct.description}
+                <p className="mt-2 text-white font-semibold">SKU: {quickViewProduct.sku || 'GEN-001'}</p>
+              </div>
+            )}
+          </div>
 
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight font-serif-brand">{quickViewProduct.name}</h2>
-            <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-semibold">{quickViewProduct.category} • {quickViewProduct.gender}</p>
-
-            {/* Price & Installments */}
-            <div className="mt-4 pb-4 border-b border-gray-100">
-              <span className="text-[10px] text-emerald-700 uppercase font-bold tracking-wider block">
-                Hasta 6 cuotas sin recargo de ${cuotaAmount.toLocaleString('es-UY')} UYU
+          {/* Shipping Accordion */}
+          <div>
+            <button
+              onClick={() => setOpenSection(openSection === 'shipping' ? null : 'shipping')}
+              className="w-full py-4 flex items-center justify-between text-left font-bold text-gray-200 cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <Truck className="w-4 h-4 text-emerald-400" />
+                Envíos y entregas en Uruguay
               </span>
-              <span className="text-3xl font-black text-[#1b3b2b]">
-                ${quickViewProduct.price.toLocaleString('es-UY')} <span className="text-sm font-semibold text-gray-500">UYU</span>
-              </span>
-            </div>
+              {openSection === 'shipping' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+            {openSection === 'shipping' && (
+              <div className="pb-4 text-gray-400 space-y-1.5">
+                <p>• Montevideo: Entregas en 24 a 48 hs.</p>
+                <p>• Interior del país: Envíos por DAC o Mirtrans a domicilio o agencia.</p>
+                <p>• Retiro sin costo en zonas coordinadas de Montevideo.</p>
+              </div>
+            )}
+          </div>
+        </div>
 
-            {/* Size Selector Grid & Size Guide Trigger */}
-            <div className="mt-6">
-              <div className="flex items-center justify-between mb-3">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-gray-900">
-                  Elegí tu talle (EU)
-                </label>
-                <button
-                  onClick={() => setShowSizeGuide(true)}
-                  className="text-xs text-[#1b3b2b] font-bold underline hover:opacity-80 flex items-center gap-1 cursor-pointer"
+        {/* Related Products Carousel */}
+        {relatedProducts.length > 0 && (
+          <div className="space-y-3 pt-4">
+            <h4 className="text-xs font-extrabold uppercase tracking-widest text-gray-400">
+              Modelos relacionados
+            </h4>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {relatedProducts.map((rel) => (
+                <div
+                  key={rel.id}
+                  onClick={() => setQuickViewProduct(rel)}
+                  className="aspect-square bg-[#121518] rounded-xl overflow-hidden p-2 border border-white/5 cursor-pointer hover:border-white/20 transition-all"
                 >
-                  <Ruler className="w-3.5 h-3.5" />
-                  Guía de talles
-                </button>
-              </div>
-
-              <div className="grid grid-cols-5 gap-2">
-                {sizes.map((size) => {
-                  const isSelected = selectedSize === size;
-                  return (
-                    <button
-                      key={size}
-                      onClick={() => {
-                        setSelectedSize(size);
-                        setSizeError(false);
-                      }}
-                      className={`py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
-                        isSelected
-                          ? 'bg-[#1b3b2b] text-white shadow-md scale-105'
-                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-200'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {sizeError && (
-                <div className="mt-3 p-3 rounded-xl bg-red-50 border border-red-200 flex items-center gap-2 text-red-600 text-xs font-bold">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  <span>Seleccioná un talle antes de continuar</span>
+                  <img
+                    src={rel.images?.[0] || '/logo_genuinos.webp'}
+                    alt={rel.name}
+                    className="w-full h-full object-cover rounded-lg"
+                  />
                 </div>
-              )}
-            </div>
-
-            {/* Delivery & Assurance Info */}
-            <div className="mt-6 bg-gray-50 p-3.5 rounded-2xl border border-gray-200 space-y-2 text-xs text-gray-700">
-              <div className="flex items-center gap-2 font-bold text-gray-900">
-                <Truck className="w-4 h-4 text-[#1b3b2b]" />
-                <span>Retirá o recibí donde estés en Uruguay</span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-600">
-                <ShieldCheck className="w-4 h-4 text-[#1b3b2b]" />
-                <span>Garantía de autenticidad 100% oficial GENUINOS</span>
-              </div>
-            </div>
-
-            {/* Quantity Controls */}
-            <div className="mt-6 flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-gray-900">Cantidad</span>
-              <div className="flex items-center gap-3 bg-gray-100 border border-gray-200 rounded-xl p-1">
-                <button
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="p-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-200 transition-colors cursor-pointer"
-                  aria-label="Disminuir cantidad"
-                >
-                  <Minus className="w-4 h-4" />
-                </button>
-                <span className="text-sm font-black text-gray-900 px-2 min-w-6 text-center">{quantity}</span>
-                <button
-                  onClick={() => setQuantity((q) => q + 1)}
-                  className="p-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-200 transition-colors cursor-pointer"
-                  aria-label="Aumentar cantidad"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
+              ))}
             </div>
           </div>
+        )}
+      </div>
 
-          {/* Action CTAs */}
-          <div className="pt-4 border-t border-gray-100 space-y-3">
-            <button
-              onClick={handleAddToCart}
-              className="w-full btn-forest py-3.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-md"
-            >
-              <ShoppingBag className="w-4 h-4" />
-              Sumar al Carrito
-            </button>
+      {/* Sticky Bottom Action Buttons */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0a0c0e]/95 backdrop-blur-lg border-t border-white/10 p-4">
+        <div className="max-w-3xl mx-auto grid grid-cols-2 gap-3">
+          <button
+            onClick={handleAddToCart}
+            className="btn-dark-primary py-3.5 rounded-full text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-2xl cursor-pointer"
+          >
+            <ShoppingBag className="w-4 h-4 text-black" />
+            <span>Agregar</span>
+          </button>
 
-            <button
-              onClick={handleDirectWhatsAppBuy}
-              className="w-full btn-whatsapp py-3 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-md"
-            >
-              <MessageCircle className="w-4 h-4" />
-              Comprar por WhatsApp
-            </button>
-          </div>
+          <button
+            onClick={handleDirectWhatsAppBuy}
+            className="btn-whatsapp-dark py-3.5 rounded-full text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-2xl cursor-pointer"
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span>WhatsApp</span>
+          </button>
         </div>
       </div>
     </div>

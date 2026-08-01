@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,8 +6,8 @@
 
 @layer base {
   body {
-    background-color: #f8f9fa;
-    color: #111827;
+    background-color: #0a0c0e;
+    color: #f3f4f6;
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
     -webkit-tap-highlight-color: transparent;
@@ -19,75 +19,73 @@
 }
 
 @layer utilities {
+  .bg-dark-app {
+    background-color: #0a0c0e;
+  }
+
+  .bg-dark-card {
+    background-color: #121518;
+  }
+
   .bg-forest-brand {
-    background-color: #1b3b2b;
+    background-color: #13261c;
   }
 
   .text-forest-brand {
-    color: #1b3b2b;
+    color: #34d399;
   }
 
-  .border-forest-brand {
-    border-color: #1b3b2b;
+  .btn-dark-primary {
+    background-color: #ffffff;
+    color: #0a0c0e;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .btn-forest {
-    background-color: #1b3b2b;
-    color: #ffffff;
-    font-weight: 700;
-    transition: all 0.2s ease-in-out;
+  .btn-dark-primary:hover {
+    background-color: #e5e7eb;
+    transform: translateY(-1px);
   }
 
-  .btn-forest:hover {
-    background-color: #12271c;
-    box-shadow: 0 4px 14px rgba(27, 59, 43, 0.25);
-  }
-
-  .btn-forest:active {
+  .btn-dark-primary:active {
     transform: scale(0.97);
   }
 
-  .btn-outline-forest {
-    background-color: transparent;
-    border: 2px solid #1b3b2b;
-    color: #1b3b2b;
-    font-weight: 700;
-    transition: all 0.2s ease-in-out;
-  }
-
-  .btn-outline-forest:hover {
-    background-color: #1b3b2b;
-    color: #ffffff;
-  }
-
-  .btn-whatsapp {
+  .btn-whatsapp-dark {
     background-color: #25d366;
     color: #ffffff;
-    font-weight: 700;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     transition: all 0.2s ease-in-out;
   }
 
-  .btn-whatsapp:hover {
+  .btn-whatsapp-dark:hover {
     background-color: #1eb956;
-    box-shadow: 0 4px 14px rgba(37, 211, 102, 0.3);
+  }
+
+  .btn-whatsapp-dark:active {
+    transform: scale(0.97);
   }
 }
 
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f8f9fa;
+  background: #0a0c0e;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #272c33;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #1b3b2b;
+  background: #34d399;
 }
