@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { uy, type Product } from "../lib/data";
 import { useStore } from "../lib/store";
-import { Close } from "./ui";
+import { ChevronLeft, ChevronRight, Close } from "./ui";
 import { ProductCard } from "./ProductCard";
 
 export function ProductDetail() {
@@ -41,6 +41,21 @@ export function ProductDetail() {
     product !== null &&
     product.inStock !== false &&
     selectedSize !== null;
+
+  const currentIndex = useMemo(() => {
+    if (!product) return -1;
+    return products.findIndex((p) => p.id === product.id);
+  }, [product, products]);
+
+  const prevProduct = useMemo(() => {
+    if (currentIndex <= 0) return null;
+    return products[currentIndex - 1];
+  }, [currentIndex, products]);
+
+  const nextProduct = useMemo(() => {
+    if (currentIndex < 0 || currentIndex >= products.length - 1) return null;
+    return products[currentIndex + 1];
+  }, [currentIndex, products]);
 
   function close() {
     setSelectedProduct(null);
@@ -82,6 +97,32 @@ export function ProductDetail() {
           <>
             {/* Header */}
             <header className="flex h-14 shrink-0 items-center justify-between border-b border-ink/8 px-5">
+              <div className="flex items-center gap-1">
+                <button
+                  aria-label="Producto anterior"
+                  onClick={() => prevProduct && setSelectedProduct(prevProduct)}
+                  disabled={!prevProduct}
+                  className={`grid h-10 w-10 place-items-center transition-colors ${
+                    prevProduct
+                      ? "text-ink/70 hover:text-ink"
+                      : "cursor-not-allowed text-ink/20"
+                  }`}
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button
+                  aria-label="Producto siguiente"
+                  onClick={() => nextProduct && setSelectedProduct(nextProduct)}
+                  disabled={!nextProduct}
+                  className={`grid h-10 w-10 place-items-center transition-colors ${
+                    nextProduct
+                      ? "text-ink/70 hover:text-ink"
+                      : "cursor-not-allowed text-ink/20"
+                  }`}
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
               <p className="text-[10.5px] font-bold uppercase tracking-[0.2em] text-smoke">
                 Detalle
               </p>

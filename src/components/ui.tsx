@@ -151,6 +151,16 @@ export const Arrow = (p: I) => (
     <path d="M5 12h14M13 6l6 6-6 6" />
   </svg>
 );
+export const ChevronLeft = (p: I) => (
+  <svg {...base} {...p}>
+    <path d="M9 18l6-6-6-6" />
+  </svg>
+);
+export const ChevronRight = (p: I) => (
+  <svg {...base} {...p}>
+    <path d="M15 18l-6-6 6-6" />
+  </svg>
+);
 export const Plus = (p: I) => (
   <svg {...base} {...p}>
     <path d="M12 5v14M5 12h14" />
