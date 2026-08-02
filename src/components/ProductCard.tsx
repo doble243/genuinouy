@@ -10,12 +10,15 @@ export function ProductCard({
   p: Product;
   size?: "md" | "sm";
 }) {
-  const { add, wish, toggleWish } = useStore();
+  const { add, wish, toggleWish, setSelectedProduct } = useStore();
   const [quick, setQuick] = useState(false);
   const liked = wish.includes(p.id);
 
   return (
-    <article className="group relative">
+    <article
+      className="group relative cursor-pointer"
+      onClick={() => setSelectedProduct(p)}
+    >
       <div
         className="relative overflow-hidden bg-bone-200"
         onMouseLeave={() => setQuick(false)}
@@ -46,10 +49,13 @@ export function ProductCard({
 
         <button
           type="button"
-          onClick={() => toggleWish(p.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleWish(p.id);
+          }}
           aria-label={liked ? "Quitar de favoritos" : "Guardar en favoritos"}
           aria-pressed={liked}
-          className="absolute right-2 top-2 grid h-8 w-8 place-items-center text-ink/70 transition-colors hover:text-ink"
+          className="absolute right-2 top-2 grid h-8 w-8 place-items-center text-ink/70 transition-colors hover:text-ink z-10"
         >
           <Heart
             className="h-[18px] w-[18px]"
@@ -63,7 +69,10 @@ export function ProductCard({
           {!quick ? (
             <button
               type="button"
-              onClick={() => setQuick(true)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setQuick(true);
+              }}
               className="w-full bg-ink/92 py-2.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-bone backdrop-blur-sm transition-colors hover:bg-ink"
             >
               Agregar
@@ -74,7 +83,8 @@ export function ProductCard({
                 <button
                   key={s}
                   type="button"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     add(p, s);
                     setQuick(false);
                   }}
@@ -115,10 +125,13 @@ export function ProductCard({
         </p>
       </div>
 
-      {/* Add móvil: toda la card abre el detalle; botón discreto de talle rápido */}
+      {/* Add móvil: quick add directo al carrito (no abre el modal) */}
       <button
         type="button"
-        onClick={() => add(p, p.sizes[Math.floor(p.sizes.length / 2)])}
+        onClick={(e) => {
+          e.stopPropagation();
+          add(p, p.sizes[Math.floor(p.sizes.length / 2)]);
+        }}
         className="mt-2 w-full border border-ink/12 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/80 transition-colors active:bg-ink active:text-bone md:hidden"
       >
         Agregar

@@ -350,7 +350,7 @@ export function Footer() {
           <div className="md:col-span-4">
             <Logo className="h-8" invert />
             <p className="mt-4 max-w-[280px] text-[13px] leading-relaxed text-bone/55">
-              Championes originales seleccionados. Montevideo, Uruguay.
+              Championes originales seleccionados. Pando, Uruguay.
             </p>
             <div className="mt-6 flex gap-3">
               <a

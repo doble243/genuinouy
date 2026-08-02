@@ -94,7 +94,7 @@ export function ProductDetail() {
               </button>
             </header>
 
-            {/* Body */}
+            {/* Body: scrollable content */}
             <div className="flex-1 overflow-y-auto">
               {/* Image */}
               <div className="relative overflow-hidden bg-bone-200">
@@ -202,8 +202,8 @@ export function ProductDetail() {
               )}
             </div>
 
-            {/* Sticky bottom action area — always visible */}
-            <div className="shrink-0 border-t border-ink/8 bg-bone/95 px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md shadow-[0_-12px_28px_-18px_rgba(0,0,0,0.18)] md:px-7 md:pt-5">
+            {/* Sticky bottom action area — always visible on mobile */}
+            <div className="shrink-0 border-t border-ink/8 bg-bone/95 px-5 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] backdrop-blur-md shadow-[0_-12px_28px_-18px_rgba(0,0,0,0.18)] md:px-7 md:pt-5">
               <p className="mb-2.5 text-[10.5px] font-bold uppercase tracking-[0.2em] text-smoke">
                 Talle
               </p>
