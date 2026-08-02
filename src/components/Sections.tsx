@@ -348,7 +348,7 @@ export function Footer() {
       <div className="edge relative mx-auto max-w-[1600px]">
         <div className="grid gap-10 md:grid-cols-12">
           <div className="md:col-span-4">
-            <Logo className="h-8" invert />
+            <Logo className="h-8" glow />
             <p className="mt-4 max-w-[280px] text-[13px] leading-relaxed text-bone/55">
               Championes originales seleccionados. Pando, Uruguay.
             </p>

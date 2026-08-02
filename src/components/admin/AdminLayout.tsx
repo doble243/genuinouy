@@ -50,8 +50,8 @@ export function AdminLayout({
               <img
                 src={LOGO}
                 alt="GENUINOS"
-                className="h-6 w-auto brightness-0 invert object-contain"
-                style={{ filter: 'drop-shadow(0 0 6px rgba(212,168,83,0.35))' }}
+                className="h-6 w-auto object-contain"
+                style={{ filter: 'drop-shadow(0 0 8px rgba(212,168,83,0.5))' }}
               />
               <span className="bg-gold-500/20 text-gold-400 text-[10px] font-bold tracking-widest px-2 py-0.5 rounded border border-gold-500/30 uppercase">
                 ADMIN
@@ -199,7 +199,7 @@ export function AdminLayout({
         {/* Mobile Header Top Bar */}
         <header className="bg-obsidian text-bone border-b border-ink/80 px-4 py-3 sticky top-0 z-30 flex items-center justify-between md:px-8">
           <div className="flex items-center gap-3">
-            <img src={LOGO} alt="GENUINOS" className="h-5 w-auto brightness-0 invert object-contain md:hidden" style={{ filter: 'drop-shadow(0 0 6px rgba(212,168,83,0.35))' }} />
+            <img src={LOGO} alt="GENUINOS" className="h-5 w-auto object-contain md:hidden" style={{ filter: 'drop-shadow(0 0 6px rgba(212,168,83,0.4))' }} />
             <div className="hidden md:flex items-center gap-2 text-xs">
               <span className="text-smoke">Admin Panel</span>
               <span className="text-smoke">/</span>
