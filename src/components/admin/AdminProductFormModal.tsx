@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { AdminProduct } from "../../types/admin";
 import { brands as brandOptions } from "../../lib/data";
+import { uploadImageToCloudinary } from "../../lib/cloudinary";
 
 interface AdminProductFormModalProps {
   isOpen: boolean;
@@ -42,6 +43,8 @@ export function AdminProductFormModal({
   const [selectedSizes, setSelectedSizes] = useState<string[]>(["39", "40", "41", "42"]);
   const [images, setImages] = useState<string[]>([]);
   const [newImageUrl, setNewImageUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEditing = Boolean(initialProduct);
 
@@ -108,6 +111,22 @@ export function AdminProductFormModal({
     if (!newImageUrl.trim()) return;
     setImages((prev) => [...prev, newImageUrl.trim()]);
     setNewImageUrl("");
+  };
+
+  // Upload a file directly to Cloudinary (unsigned preset, forces webp).
+  const handleFileUpload = async (file?: File | null) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadImageToCloudinary(file);
+      setImages((prev) => [...prev, url]);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } catch (err) {
+      console.error("Cloudinary upload failed:", err);
+      alert("No se pudo subir la imagen a Cloudinary. Revisá tu conexión y probá de nuevo.");
+    } finally {
+      setUploading(false);
+    }
   };
 
   // Image remove helper
@@ -486,6 +505,25 @@ export function AdminProductFormModal({
                 className="bg-obsidian text-bone hover:bg-ink px-4 py-2 rounded-xl font-bold text-xs shrink-0 min-h-[44px]"
               >
                 + Agregar URL
+              </button>
+            </div>
+
+            {/* Upload directo a Cloudinary (webp automático) */}
+            <div className="flex items-center gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/avif"
+                onChange={(e) => handleFileUpload(e.target.files?.[0])}
+                className="hidden"
+              />
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1 border border-dashed border-gold-500/50 rounded-xl px-3 py-2.5 text-xs font-bold text-gold-600 hover:bg-gold-500/5 transition-all min-h-[44px] disabled:opacity-60"
+              >
+                {uploading ? "Subiendo a Cloudinary…" : "⬆ Subir imagen (se guarda en webp)"}
               </button>
             </div>
           </div>

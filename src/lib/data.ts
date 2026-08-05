@@ -1,3 +1,5 @@
+import { cdnUrl } from "./cloudinary";
+
 export const LOGO = "https://genuinos.simplemente.com.uy/logo_genuinos.webp";
 
 export type Product = {
@@ -179,13 +181,10 @@ export const brandLogo = (slug: string, color = "1a1a1a") =>
 export const uy = (n: number) =>
   "$ " + n.toLocaleString("es-UY", { maximumFractionDigits: 0 });
 
-export const HERO_IMG =
-  "https://images.pexels.com/photos/29183247/pexels-photo-29183247.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=1800";
+export const HERO_IMG = cdnUrl("genuinos/assets/hero", "f_auto,q_auto");
 
-export const CAT_SHOES =
-  "https://images.pexels.com/photos/24702077/pexels-photo-24702077.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=1100";
-export const CAT_SALE =
-  "https://images.pexels.com/photos/8473456/pexels-photo-8473456.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=1100";
+export const CAT_SHOES = cdnUrl("genuinos/assets/cat_shoes", "f_auto,q_auto");
+export const CAT_SALE = cdnUrl("genuinos/assets/cat_sale", "f_auto,q_auto");
 
 export const EDITORIAL_IMG =
-  "https://images.pexels.com/photos/10301339/pexels-photo-10301339.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=1400";
+  cdnUrl("genuinos/assets/editorial", "f_auto,q_auto");

@@ -1,5 +1,9 @@
 import { supabase } from "./supabase";
 import type { Product } from "./data";
+import { cdnUrl, resolveImageUrl } from "./cloudinary";
+
+/** Imagen de respaldo en Cloudinary (webp) cuando no hay foto cargada. */
+const FALLBACK_IMG = cdnUrl("genuinos/assets/cat_shoes", "f_auto,q_auto");
 
 export type DbProductRow = {
   id: string;
@@ -40,16 +44,11 @@ export type UpdateProductInput = Partial<CreateProductInput>;
  * Mapea una fila de la base de datos Supabase al tipo Product utilizado en la UI.
  */
 export function mapDbToProduct(item: DbProductRow | any): Product {
-  const images = Array.isArray(item.images) && item.images.length > 0 ? item.images : [];
-  const mainImage =
-    images[0] ||
-    item.image ||
-    "https://images.pexels.com/photos/24702077/pexels-photo-24702077.jpeg";
-  const hoverImage =
-    images[1] ||
-    item.hover ||
-    mainImage ||
-    "https://images.pexels.com/photos/4296075/pexels-photo-4296075.jpeg";
+  const rawImages =
+    Array.isArray(item.images) && item.images.length > 0 ? item.images : [];
+  const images = rawImages.map(resolveImageUrl);
+  const mainImage = images[0] || item.image || FALLBACK_IMG;
+  const hoverImage = images[1] || item.hover || mainImage || FALLBACK_IMG;
   const sizes = (item.sizes || [38, 39, 40, 41, 42, 43, 44]).map(String);
 
   return {
@@ -109,11 +108,8 @@ export async function createProduct(input: CreateProductInput): Promise<Product>
       : [38, 39, 40, 41, 42, 43, 44],
     images:
       input.images && input.images.length > 0
-        ? input.images
-        : [
-            "https://images.pexels.com/photos/24702077/pexels-photo-24702077.jpeg",
-            "https://images.pexels.com/photos/4296075/pexels-photo-4296075.jpeg",
-          ],
+        ? input.images.map(resolveImageUrl)
+        : [FALLBACK_IMG, FALLBACK_IMG],
     featured: Boolean(input.featured),
   };
 
@@ -155,7 +151,7 @@ export async function updateProduct(
   if (input.sizes !== undefined) {
     dbPayload.sizes = input.sizes.map((s) => Number(s)).filter((n) => !isNaN(n));
   }
-  if (input.images !== undefined) dbPayload.images = input.images;
+  if (input.images !== undefined) dbPayload.images = input.images.map(resolveImageUrl);
   if (input.featured !== undefined) dbPayload.featured = input.featured;
 
   const { data, error } = await supabase

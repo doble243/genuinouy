@@ -6,6 +6,30 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
 
+/**
+ * Mapa nombre-archivo → URL Cloudinary webp (claves en minúscula).
+ * Se genera una vez con la subida inicial; si una foto nueva no está en el
+ * mapa, el pipeline cae al path local tradicional.
+ */
+const cloudinaryMapPath = path.join(rootDir, 'src', 'lib', 'cloudinaryProducts.json');
+let cloudinaryMap = {};
+try {
+  cloudinaryMap = JSON.parse(fs.readFileSync(cloudinaryMapPath, 'utf8'));
+} catch {
+  cloudinaryMap = {};
+}
+
+/** Resuelve un nombre de foto local (ej. Adidas_2000_1.jpg) a su URL webp. */
+function resolvePhotoUrl(img) {
+  if (!img) return img;
+  // URLs absolutas ya migradas → tal cual
+  if (/^https?:\/\//.test(img)) return img;
+  const base = path.basename(img).toLowerCase().normalize('NFC').replace(/\.(jpg|jpeg|png|webp|avif)$/i, '');
+  const cloudUrl = cloudinaryMap[base];
+  if (cloudUrl) return cloudUrl;
+  return img.startsWith('/') ? img : `/fotos_productos/${img}`;
+}
+
 export function parseCSVLine(line) {
   const result = [];
   let current = '';
@@ -69,7 +93,7 @@ export function parseProductRow(headers, rowValues) {
       .split(';')
       .map(img => img.trim())
       .filter(Boolean)
-      .map(img => (img.startsWith('/') ? img : `/fotos_productos/${img}`));
+      .map(resolvePhotoUrl);
   }
   if (images.length === 0) {
     images = ['/logo_genuinos.webp'];
