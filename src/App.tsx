@@ -13,7 +13,7 @@ import {
 } from "./components/Sections";
 import { AllProducts } from "./components/AllProducts";
 import { ProductDetail } from "./components/ProductDetail";
-import { AdminPanel } from "./components/admin/AdminPanel";
+import { AdminGate } from "./components/admin/AdminGate";
 import { StoreProvider } from "./lib/store";
 
 export default function App() {
@@ -55,7 +55,7 @@ export default function App() {
   return (
     <StoreProvider>
       {isAdmin ? (
-        <AdminPanel onExitAdmin={handleExitAdmin} />
+        <AdminGate onExitAdmin={handleExitAdmin} />
       ) : (
         <div className="min-h-screen bg-bone">
           <Header />
