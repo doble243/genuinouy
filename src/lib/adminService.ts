@@ -94,6 +94,10 @@ export async function fetchProducts(): Promise<Product[]> {
  */
 export async function createProduct(input: CreateProductInput): Promise<Product> {
   const dbPayload = {
+    id:
+      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `gen-${Date.now()}-${Math.floor(Math.random() * 1e9)}`,
     name: input.name,
     brand: input.brand,
     price: input.price,
