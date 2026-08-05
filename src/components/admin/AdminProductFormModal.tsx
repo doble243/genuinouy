@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import type { AdminProduct } from "../../types/admin";
 import { brands as brandOptions } from "../../lib/data";
-import { uploadImageToCloudinary } from "../../lib/cloudinary";
+import { cdnUrl, uploadImageToCloudinary } from "../../lib/cloudinary";
+
+const FALLBACK_IMG = cdnUrl("genuinos/assets/cat_shoes", "f_auto,q_auto");
 
 interface AdminProductFormModalProps {
   isOpen: boolean;
@@ -42,7 +44,6 @@ export function AdminProductFormModal({
   const [inStock, setInStock] = useState<boolean>(true);
   const [selectedSizes, setSelectedSizes] = useState<string[]>(["39", "40", "41", "42"]);
   const [images, setImages] = useState<string[]>([]);
-  const [newImageUrl, setNewImageUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -80,9 +81,7 @@ export function AdminProductFormModal({
       setStockQty(10);
       setInStock(true);
       setSelectedSizes(["39", "40", "41", "42"]);
-      setImages([
-        "https://images.pexels.com/photos/24702077/pexels-photo-24702077.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=900",
-      ]);
+      setImages([]);
     }
   }, [initialProduct, isOpen]);
 
@@ -104,13 +103,6 @@ export function AdminProductFormModal({
     setSelectedSizes((prev) =>
       prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
     );
-  };
-
-  // Image addition helper
-  const handleAddImage = () => {
-    if (!newImageUrl.trim()) return;
-    setImages((prev) => [...prev, newImageUrl.trim()]);
-    setNewImageUrl("");
   };
 
   // Upload a file directly to Cloudinary (unsigned preset, forces webp).
@@ -152,7 +144,7 @@ export function AdminProductFormModal({
     const numericCompareAt = compareAt ? parseFloat(compareAt) : undefined;
     const finalBrand = brand === "Otro" ? customBrand || "Marca GENUINOS" : brand;
 
-    const primaryImg = images[0] || "https://images.pexels.com/photos/24702077/pexels-photo-24702077.jpeg";
+    const primaryImg = images[0] || FALLBACK_IMG;
     const hoverImg = images[1] || primaryImg;
 
     const productPayload: Partial<AdminProduct> = {
@@ -490,25 +482,7 @@ export function AdminProductFormModal({
               ))}
             </div>
 
-            {/* Add New Image Input */}
-            <div className="flex items-center gap-2">
-              <input
-                type="url"
-                value={newImageUrl}
-                onChange={(e) => setNewImageUrl(e.target.value)}
-                placeholder="https://images.pexels.com/..."
-                className="flex-1 bg-bone-200/60 border border-bone-300 rounded-xl px-3 py-2 text-xs text-ink focus:outline-none focus:border-gold-500 transition-all min-h-[44px]"
-              />
-              <button
-                type="button"
-                onClick={handleAddImage}
-                className="bg-obsidian text-bone hover:bg-ink px-4 py-2 rounded-xl font-bold text-xs shrink-0 min-h-[44px]"
-              >
-                + Agregar URL
-              </button>
-            </div>
-
-            {/* Upload directo a Cloudinary (webp automático) */}
+            {/* Upload directo a Cloudinary (webp automático) — única vía de subida */} 
             <div className="flex items-center gap-2">
               <input
                 ref={fileInputRef}
