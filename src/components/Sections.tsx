@@ -1,7 +1,6 @@
 import {
   brandLogo,
   brands,
-  CAT_APPAREL,
   CAT_SALE,
   CAT_SHOES,
   EDITORIAL_IMG,
@@ -74,18 +73,11 @@ const CATS = [
     ratio: "aspect-[4/5] md:aspect-auto md:h-full",
   },
   {
-    title: "Ropa y accesorios",
-    meta: "Buzos, remeras, medias",
-    img: CAT_APPAREL,
-    span: "md:col-span-2",
-    ratio: "aspect-[4/3] md:aspect-[16/9]",
-  },
-  {
     title: "Últimos pares",
     meta: "Talles limitados",
     img: CAT_SALE,
-    span: "md:col-span-2",
-    ratio: "aspect-[4/3] md:aspect-[16/9]",
+    span: "md:col-span-2 md:row-span-2",
+    ratio: "aspect-[4/3] md:aspect-auto md:h-full",
   },
 ];
 
@@ -331,7 +323,7 @@ export function Trust() {
 const FOOT = [
   {
     title: "Tienda",
-    links: ["Nuevos ingresos", "Championes", "Ropa y accesorios", "Últimos pares"],
+    links: ["Nuevos ingresos", "Championes", "Últimos pares", "Ofertas"],
   },
   { title: "Marcas", links: ["Nike", "Adidas", "Jordan", "New Balance"] },
   { title: "Ayuda", links: ["Envíos", "Cambios", "Guía de talles", "Contacto"] },

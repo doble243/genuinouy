@@ -17,6 +17,17 @@
   --color-gold-400: #d6b45f;
   --color-gold-500: #c8a24a;
   --color-gold-600: #a8863a;
+
+  /* Layout metrics */
+  --header-h: 3.5rem;
+  --tabbar-h: 3.75rem;
+  --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --header-h: 4rem;
+  }
 }
 
 html {
@@ -36,6 +47,61 @@ body {
 ::selection {
   background: var(--color-gold-500);
   color: #000;
+}
+
+/* Anchored sections must clear the sticky header */
+[id] {
+  scroll-margin-top: calc(var(--header-h) + 1.5rem);
+}
+
+/* Keyboard-only focus ring, consistent across the app */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-gold-500);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ---------- Sticky header chrome ----------
+   Driven by a scroll-driven animation (no scroll listener, no re-render).
+   Falls back to a permanently translucent bar where unsupported. */
+.header-chrome {
+  background-color: var(--color-bone);
+  border-bottom-color: transparent;
+  backdrop-filter: blur(0px) saturate(1);
+  box-shadow: 0 0 0 0 transparent;
+}
+
+@keyframes header-chrome {
+  to {
+    background-color: color-mix(in oklab, var(--color-bone) 82%, transparent);
+    border-bottom-color: color-mix(in oklab, var(--color-ink) 10%, transparent);
+    backdrop-filter: blur(16px) saturate(1.4);
+    box-shadow: 0 10px 30px -24px color-mix(in oklab, var(--color-ink) 70%, transparent);
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  .header-chrome {
+    animation: header-chrome linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 5rem;
+  }
+}
+
+@supports not (animation-timeline: scroll()) {
+  .header-chrome {
+    background-color: color-mix(in oklab, var(--color-bone) 88%, transparent);
+    border-bottom-color: color-mix(in oklab, var(--color-ink) 8%, transparent);
+    backdrop-filter: blur(16px) saturate(1.4);
+  }
+}
+
+/* ---------- Mobile tab bar ---------- */
+.tabbar {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background-color: color-mix(in oklab, var(--color-bone) 88%, transparent);
+  backdrop-filter: blur(18px) saturate(1.4);
+  border-top: 1px solid color-mix(in oklab, var(--color-ink) 8%, transparent);
 }
 
 @utility no-scrollbar {

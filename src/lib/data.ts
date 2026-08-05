@@ -184,8 +184,6 @@ export const HERO_IMG =
 
 export const CAT_SHOES =
   "https://images.pexels.com/photos/24702077/pexels-photo-24702077.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=1100";
-export const CAT_APPAREL =
-  "https://images.pexels.com/photos/26965987/pexels-photo-26965987.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=1100";
 export const CAT_SALE =
   "https://images.pexels.com/photos/8473456/pexels-photo-8473456.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=1100";
 
