@@ -10,7 +10,21 @@ export type AdminProduct = Product & {
   createdAt?: string;
 };
 
-export type AdminTab = "dashboard" | "products";
+export type HeroSlide = {
+  id: string;
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  buttonText: string;
+  buttonHref: string;
+  imageUrl: string;
+  align: "left" | "center" | "right";
+  sortOrder: number;
+  active: boolean;
+  createdAt?: string;
+};
+
+export type AdminTab = "dashboard" | "products" | "hero";
 
 export type StoreOption = {
   id: string;

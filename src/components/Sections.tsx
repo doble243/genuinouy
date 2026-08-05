@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   brandLogo,
   brands,
@@ -9,55 +10,231 @@ import {
 } from "../lib/data";
 import { useStore } from "../lib/store";
 import { ProductCard } from "./ProductCard";
-import { Arrow, Logo, LogoWatermark, Reveal, SectionHead } from "./ui";
+import {
+  Arrow,
+  ChevronLeft,
+  ChevronRight,
+  Logo,
+  LogoWatermark,
+  Reveal,
+  SectionHead,
+} from "./ui";
+import { fetchHeroSlides } from "../lib/heroService";
+import type { HeroSlide } from "../types/admin";
+import { resolveImageUrl } from "../lib/cloudinary";
 
 /* ============================ HERO ============================ */
+
+// Slide por defecto: replica el hero estático original para que el sitio
+// nunca quede en blanco (sin slides en DB o si el fetch falla).
+const FALLBACK_HERO_SLIDE: HeroSlide = {
+  id: "fallback",
+  eyebrow: "Nuevos ingresos",
+  title: "Los pares que no\npasan desapercibidos.",
+  subtitle:
+    "Selección corta de championes originales, con stock real en Uruguay.",
+  buttonText: "Ver nuevos ingresos",
+  buttonHref: "#nuevos",
+  imageUrl: HERO_IMG,
+  align: "left",
+  sortOrder: 0,
+  active: true,
+};
+
+// Alineación horizontal del bloque de texto (cross-axis de la columna flex).
+const ALIGN_CONTENT: Record<HeroSlide["align"], string> = {
+  left: "items-start text-left",
+  center: "items-center text-center",
+  right: "items-end text-right",
+};
+
+// Overlay legible: izq = de izquierda a derecha, centro = simétrico, der = inverso.
+const ALIGN_OVERLAY: Record<HeroSlide["align"], string> = {
+  left: "bg-gradient-to-t from-obsidian/85 via-obsidian/25 to-obsidian/10 md:bg-gradient-to-r md:from-obsidian/80 md:via-obsidian/25 md:to-transparent",
+  center:
+    "bg-gradient-to-t from-obsidian/85 via-obsidian/25 to-obsidian/10 md:bg-gradient-to-r md:from-obsidian/60 md:via-obsidian/30 md:to-obsidian/60",
+  right: "bg-gradient-to-t from-obsidian/85 via-obsidian/25 to-obsidian/10 md:bg-gradient-to-l md:from-obsidian/80 md:via-obsidian/25 md:to-transparent",
+};
+
+// Ancho máximo del bloque de texto (centrado cuando align === center).
+const ALIGN_TITLE_BOX: Record<HeroSlide["align"], string> = {
+  left: "max-w-[620px]",
+  center: "mx-auto max-w-[760px]",
+  right: "max-w-[620px]",
+};
+
+const HERO_INTERVAL_MS = 6000;
+
+function HeroSlideContent({
+  slide,
+  hidden = false,
+}: {
+  slide: HeroSlide;
+  hidden?: boolean;
+}) {
+  const align = slide.align || "left";
+  const imgSrc = resolveImageUrl(slide.imageUrl) || HERO_IMG;
+  const titleLines = (slide.title || "").split("\n");
+  const eyeAlign =
+    align === "center" ? "justify-center" : align === "right" ? "justify-end" : "";
+
+  return (
+    <div
+      className={`absolute inset-0 transition-opacity duration-700 ${
+        hidden ? "pointer-events-none opacity-0" : "opacity-100"
+      }`}
+      aria-hidden={hidden}
+    >
+      <img
+        src={imgSrc}
+        alt={slide.eyebrow || "GENUINOS"}
+        fetchPriority={hidden ? "low" : undefined}
+        loading={hidden ? "lazy" : "eager"}
+        decoding="async"
+        className="h-full w-full object-cover object-center"
+      />
+
+      {/* Marca de agua enorme, apenas visible */}
+      <LogoWatermark
+        tone="light"
+        opacity={0.07}
+        className="absolute -right-[12%] top-1/2 w-[85%] max-w-none -translate-y-1/2 md:-right-[6%] md:w-[52%]"
+      />
+
+      {/* Overlay leve solo para lectura */}
+      <div className={`absolute inset-0 ${ALIGN_OVERLAY[align]}`} />
+
+      <div
+        className={`edge absolute inset-0 mx-auto flex max-w-[1600px] flex-col justify-end pb-12 md:justify-center md:pb-0 ${ALIGN_CONTENT[align]}`}
+      >
+        <Reveal className={ALIGN_TITLE_BOX[align]}>
+          {slide.eyebrow && (
+            <p
+              className={`mb-4 flex items-center gap-3 text-[10.5px] font-semibold uppercase tracking-[0.24em] text-bone/70 ${eyeAlign}`}
+            >
+              <span className="h-px w-8 bg-gold-500" />
+              {slide.eyebrow}
+            </p>
+          )}
+          <h1 className="text-[34px] font-extrabold leading-[0.98] tracking-[-0.035em] text-bone sm:text-[46px] md:text-[62px] lg:text-[74px]">
+            {titleLines.map((line, i, arr) => (
+              <span key={i}>
+                {line}
+                {i < arr.length - 1 ? <br /> : null}
+              </span>
+            ))}
+          </h1>
+          {slide.subtitle && (
+            <p
+              className={`mt-4 max-w-[420px] text-[14px] leading-relaxed text-bone/70 md:text-[16px] ${
+                align === "center" ? "mx-auto" : ""
+              }`}
+            >
+              {slide.subtitle}
+            </p>
+          )}
+          {slide.buttonText && (
+            <a
+              href={slide.buttonHref || "#nuevos"}
+              tabIndex={hidden ? -1 : undefined}
+              className="group mt-8 inline-flex items-center gap-3 bg-bone px-7 py-4 text-[12px] font-bold uppercase tracking-[0.18em] text-ink transition-colors duration-300 hover:bg-gold-500"
+            >
+              {slide.buttonText}
+              <Arrow className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+            </a>
+          )}
+        </Reveal>
+      </div>
+    </div>
+  );
+}
+
 export function Hero() {
+  const [slides, setSlides] = useState<HeroSlide[] | null>(null);
+  const [current, setCurrentState] = useState(0);
+
+  // Carga los slides del hero; usa solo los activos; ante error → null (fallback).
+  useEffect(() => {
+    let cancelled = false;
+    fetchHeroSlides()
+      .then((all) => {
+        if (cancelled) return;
+        const active = all.filter((s) => s.active);
+        setSlides(active.length > 0 ? active : null);
+      })
+      .catch(() => {
+        if (!cancelled) setSlides(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Auto-avance automático cada ~6s (solo con más de un slide).
+  useEffect(() => {
+    if (!slides || slides.length < 2) return;
+    const timer = window.setInterval(() => {
+      setCurrentState((c) => (c + 1) % slides.length);
+    }, HERO_INTERVAL_MS);
+    return () => window.clearInterval(timer);
+  }, [slides]);
+
+  const hasCarousel = slides !== null && slides.length > 0;
+  const activeSlides = slides ?? [FALLBACK_HERO_SLIDE];
+  const safeIndex = hasCarousel ? current % activeSlides.length : 0;
+
+  const goPrev = () =>
+    setCurrentState(
+      (c) => (c - 1 + activeSlides.length) % activeSlides.length
+    );
+  const goNext = () =>
+    setCurrentState((c) => (c + 1) % activeSlides.length);
+
   return (
     <section id="top" className="relative overflow-hidden bg-obsidian">
       <div className="relative h-[78svh] min-h-[520px] w-full md:h-[86svh] md:min-h-[600px]">
-        <img
-          src={HERO_IMG}
-          alt="Championes originales seleccionados por GENUINOS"
-          fetchPriority="high"
-          decoding="async"
-          className="h-full w-full object-cover object-center"
-        />
+        {activeSlides.map((slide, i) => (
+          <HeroSlideContent
+            key={slide.id}
+            slide={slide}
+            hidden={hasCarousel && i !== safeIndex}
+          />
+        ))}
 
-        {/* Marca de agua enorme, apenas visible */}
-        <LogoWatermark
-          tone="light"
-          opacity={0.07}
-          className="absolute -right-[12%] top-1/2 w-[85%] max-w-none -translate-y-1/2 md:-right-[6%] md:w-[52%]"
-        />
-
-        {/* Overlay leve solo para lectura */}
-        <div className="absolute inset-0 bg-gradient-to-t from-obsidian/85 via-obsidian/25 to-obsidian/10 md:bg-gradient-to-r md:from-obsidian/80 md:via-obsidian/25 md:to-transparent" />
-
-        <div className="edge absolute inset-0 mx-auto flex max-w-[1600px] flex-col justify-end pb-12 md:justify-center md:pb-0">
-          <Reveal className="max-w-[620px]">
-            <p className="mb-4 flex items-center gap-3 text-[10.5px] font-semibold uppercase tracking-[0.24em] text-bone/70">
-              <span className="h-px w-8 bg-gold-500" />
-              Nuevos ingresos
-            </p>
-            <h1 className="text-[34px] font-extrabold leading-[0.98] tracking-[-0.035em] text-bone sm:text-[46px] md:text-[62px] lg:text-[74px]">
-              Los pares que no
-              <br />
-              pasan desapercibidos.
-            </h1>
-            <p className="mt-4 max-w-[420px] text-[14px] leading-relaxed text-bone/70 md:text-[16px]">
-              Selección corta de championes originales, con stock real en
-              Uruguay.
-            </p>
-            <a
-              href="#nuevos"
-              className="group mt-8 inline-flex items-center gap-3 bg-bone px-7 py-4 text-[12px] font-bold uppercase tracking-[0.18em] text-ink transition-colors duration-300 hover:bg-gold-500"
+        {hasCarousel && activeSlides.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={goPrev}
+              aria-label="Slide anterior"
+              className="absolute left-3 top-1/2 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-bone/25 bg-obsidian/40 text-bone backdrop-blur-sm transition-colors hover:border-gold-500 hover:bg-obsidian/70 hover:text-gold-400 md:left-6"
             >
-              Ver nuevos ingresos
-              <Arrow className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-            </a>
-          </Reveal>
-        </div>
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={goNext}
+              aria-label="Siguiente slide"
+              className="absolute right-3 top-1/2 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-bone/25 bg-obsidian/40 text-bone backdrop-blur-sm transition-colors hover:border-gold-500 hover:bg-obsidian/70 hover:text-gold-400 md:right-6"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+
+            <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 md:bottom-6">
+              {activeSlides.map((slide, i) => (
+                <button
+                  key={slide.id}
+                  type="button"
+                  onClick={() => setCurrentState(i)}
+                  aria-label={`Ir al slide ${i + 1}`}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    i === safeIndex ? "w-7 bg-gold-500" : "w-2 bg-bone/40 hover:bg-bone/70"
+                  }`}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </section>
   );
