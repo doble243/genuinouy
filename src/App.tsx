@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Header } from "./components/Header";
-import { CartDrawer, SearchOverlay } from "./components/Overlays";
+import { CartDrawer, SearchOverlay, WishDrawer } from "./components/Overlays";
 import {
   Brands,
   Categories,
@@ -72,6 +72,7 @@ export default function App() {
           </main>
           <Footer />
           <CartDrawer />
+          <WishDrawer />
           <SearchOverlay />
           <ProductDetail />
         </div>

@@ -1,16 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { uy, type Product } from "../lib/data";
 import { useStore } from "../lib/store";
-import { ChevronLeft, ChevronRight, Close } from "./ui";
+import { ChevronLeft, ChevronRight, Close, Heart } from "./ui";
 import { ProductCard } from "./ProductCard";
 
 export function ProductDetail() {
-  const { selectedProduct, setSelectedProduct, products, add, notify } = useStore();
+  const {
+    selectedProduct,
+    setSelectedProduct,
+    products,
+    add,
+    notify,
+    wish,
+    toggleWish,
+  } = useStore();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState<string | null>(null);
 
   const open = selectedProduct !== null;
   const product = selectedProduct;
+  const liked = product !== null && wish.includes(product.id);
 
   // Reset local state whenever the selected product changes
   useEffect(() => {
@@ -272,18 +281,38 @@ export function ProductDetail() {
                 })}
               </div>
 
-              <button
-                type="button"
-                onClick={handleAdd}
-                disabled={!canAdd}
-                className={`mt-4 w-full py-4 text-[12px] font-bold uppercase tracking-[0.18em] transition-colors duration-300 ${
-                  canAdd
-                    ? "bg-ink text-bone hover:bg-gold-500 hover:text-ink"
-                    : "cursor-not-allowed bg-ink/15 text-smoke"
-                }`}
-              >
-                Agregar al carrito
-              </button>
+              <div className="mt-4 flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleAdd}
+                  disabled={!canAdd}
+                  className={`flex-1 py-4 text-[12px] font-bold uppercase tracking-[0.18em] transition-colors duration-300 ${
+                    canAdd
+                      ? "bg-ink text-bone hover:bg-gold-500 hover:text-ink"
+                      : "cursor-not-allowed bg-ink/15 text-smoke"
+                  }`}
+                >
+                  Agregar al carrito
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggleWish(selectedProduct.id)}
+                  aria-pressed={liked}
+                  aria-label={
+                    liked ? "Quitar de favoritos" : "Guardar en favoritos"
+                  }
+                  className={`grid w-14 shrink-0 place-items-center border transition-colors duration-300 ${
+                    liked
+                      ? "border-gold-500 text-gold-600"
+                      : "border-ink/15 text-ink/70 hover:border-ink hover:text-ink"
+                  }`}
+                >
+                  <Heart
+                    className="h-5 w-5"
+                    fill={liked ? "currentColor" : "none"}
+                  />
+                </button>
+              </div>
             </div>
           </>
         )}

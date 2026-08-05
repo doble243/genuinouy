@@ -57,7 +57,11 @@ type Ctx = {
   menuOpen: boolean;
   setMenuOpen: (v: boolean) => void;
   wish: string[];
+  wishProducts: Product[];
   toggleWish: (id: string) => void;
+  clearWish: () => void;
+  wishOpen: boolean;
+  setWishOpen: (v: boolean) => void;
 
   // Modal de detalle de producto y filtro por marca
   selectedProduct: Product | null;
@@ -81,13 +85,30 @@ type Ctx = {
 
 const StoreCtx = createContext<Ctx | null>(null);
 
+const WISH_KEY = "genuinos:wish";
+
+function readStoredWish(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(WISH_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? parsed.filter((x): x is string => typeof x === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
+
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>(fallbackProducts);
   const [lines, setLines] = useState<CartLine[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [wish, setWish] = useState<string[]>([]);
+  const [wishOpen, setWishOpen] = useState(false);
+  const [wish, setWish] = useState<string[]>(readStoredWish);
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [brandFilter, setBrandFilter] = useState<string | null>(null);
@@ -171,6 +192,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setWish((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id])),
     []
   );
+
+  const clearWish = useCallback(() => setWish([]), []);
+
+  // Persistencia local de favoritos
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(WISH_KEY, JSON.stringify(wish));
+    } catch {
+      /* almacenamiento no disponible (modo privado / cuota) */
+    }
+  }, [wish]);
+
+  // Productos favoritos, en el orden en que fueron guardados
+  const wishProducts = useMemo(() => {
+    const byId = new Map(products.map((p) => [p.id, p]));
+    return wish
+      .map((id) => byId.get(id))
+      .filter((p): p is Product => p !== undefined);
+  }, [wish, products]);
 
   // Métodos Admin CRUD con optimización de interfaz y manejo de errores con toasts
   const createProduct = useCallback(
@@ -341,7 +381,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const count = lines.reduce((a, l) => a + l.qty, 0);
   const total = lines.reduce((a, l) => a + l.qty * l.product.price, 0);
 
-  const anyOpen = cartOpen || searchOpen || menuOpen || selectedProduct !== null;
+  const anyOpen =
+    cartOpen || searchOpen || menuOpen || wishOpen || selectedProduct !== null;
   useEffect(() => {
     document.body.style.overflow = anyOpen ? "hidden" : "";
     return () => {
@@ -355,6 +396,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setCartOpen(false);
         setSearchOpen(false);
         setMenuOpen(false);
+        setWishOpen(false);
         setSelectedProduct(null);
       }
     };
@@ -380,8 +422,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setSearchOpen,
       menuOpen,
       setMenuOpen,
+      wishOpen,
+      setWishOpen,
       wish,
+      wishProducts,
       toggleWish,
+      clearWish,
       createProduct,
       updateProduct,
       deleteProduct,
@@ -412,8 +458,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setSearchOpen,
       menuOpen,
       setMenuOpen,
+      wishOpen,
+      setWishOpen,
       wish,
+      wishProducts,
       toggleWish,
+      clearWish,
       createProduct,
       updateProduct,
       deleteProduct,

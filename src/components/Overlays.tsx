@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { uy } from "../lib/data";
 import { useStore } from "../lib/store";
-import { Arrow, Close, LogoWatermark, Minus, Plus, Search } from "./ui";
+import { Arrow, Close, Heart, LogoWatermark, Minus, Plus, Search } from "./ui";
 
 /* ------------------------- CARRITO ------------------------- */
 export function CartDrawer() {
@@ -141,6 +141,141 @@ export function CartDrawer() {
               </button>
             </footer>
           </>
+        )}
+      </aside>
+    </div>
+  );
+}
+
+/* ------------------------- FAVORITOS ------------------------- */
+export function WishDrawer() {
+  const {
+    wishOpen,
+    setWishOpen,
+    wishProducts,
+    toggleWish,
+    clearWish,
+    add,
+    setSelectedProduct,
+  } = useStore();
+
+  return (
+    <div
+      className={`fixed inset-0 z-[80] ${wishOpen ? "" : "pointer-events-none"}`}
+      aria-hidden={!wishOpen}
+    >
+      <div
+        onClick={() => setWishOpen(false)}
+        className={`absolute inset-0 bg-obsidian/50 transition-opacity duration-300 ${
+          wishOpen ? "opacity-100" : "opacity-0"
+        }`}
+      />
+      <aside
+        className={`absolute right-0 top-0 flex h-full w-full max-w-[430px] flex-col bg-bone transition-transform duration-[380ms] ease-[var(--ease-out-expo)] ${
+          wishOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+        role="dialog"
+        aria-label="Favoritos"
+      >
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-ink/8 px-5">
+          <h2 className="text-[13px] font-bold uppercase tracking-[0.18em]">
+            Favoritos{" "}
+            {wishProducts.length > 0 && (
+              <span className="text-smoke">({wishProducts.length})</span>
+            )}
+          </h2>
+          <div className="flex items-center gap-1">
+            {wishProducts.length > 0 && (
+              <button
+                onClick={clearWish}
+                className="rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-smoke transition-colors hover:bg-ink/[0.05] hover:text-ink"
+              >
+                Vaciar
+              </button>
+            )}
+            <button
+              aria-label="Cerrar favoritos"
+              onClick={() => setWishOpen(false)}
+              className="grid h-10 w-10 place-items-center rounded-full text-ink/70 transition-colors hover:bg-ink/[0.05] hover:text-ink"
+            >
+              <Close className="h-5 w-5" />
+            </button>
+          </div>
+        </header>
+
+        {wishProducts.length === 0 ? (
+          <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-8 text-center">
+            <LogoWatermark
+              tone="dark"
+              opacity={0.04}
+              className="absolute left-1/2 top-1/2 w-[130%] max-w-none -translate-x-1/2 -translate-y-1/2"
+            />
+            <Heart className="relative h-7 w-7 text-smoke" />
+            <p className="relative mt-3 text-[15px] font-semibold">
+              Todavía no guardaste nada
+            </p>
+            <p className="relative mt-1.5 text-[13px] text-smoke">
+              Tocá el corazón en cualquier par para guardarlo acá.
+            </p>
+            <button
+              onClick={() => setWishOpen(false)}
+              className="relative mt-6 bg-ink px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.16em] text-bone transition-colors hover:bg-obsidian"
+            >
+              Ver championes
+            </button>
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
+            {wishProducts.map((p) => (
+              <div key={p.id} className="flex gap-4 border-b border-ink/8 py-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setWishOpen(false);
+                    setSelectedProduct(p);
+                  }}
+                  className="shrink-0"
+                  aria-label={`Ver ${p.brand} ${p.name}`}
+                >
+                  <img
+                    src={p.image}
+                    alt=""
+                    className="h-24 w-20 bg-bone-200 object-cover"
+                    loading="lazy"
+                  />
+                </button>
+
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-smoke">
+                    {p.brand}
+                  </p>
+                  <h3 className="mt-0.5 line-clamp-2 text-[14px] font-semibold leading-snug">
+                    {p.name}
+                  </h3>
+                  <p className="mt-1 text-[14px] font-bold">{uy(p.price)}</p>
+
+                  <div className="mt-auto flex items-center gap-3 pt-2">
+                    <button
+                      onClick={() => {
+                        setWishOpen(false);
+                        add(p, p.sizes[Math.floor(p.sizes.length / 2)]);
+                      }}
+                      disabled={p.inStock === false}
+                      className="border border-ink/12 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/80 transition-colors hover:border-ink hover:bg-ink hover:text-bone disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink/80"
+                    >
+                      {p.inStock === false ? "Sin stock" : "Agregar"}
+                    </button>
+                    <button
+                      onClick={() => toggleWish(p.id)}
+                      className="text-[11px] text-smoke underline underline-offset-2 transition-colors hover:text-ink"
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </aside>
     </div>
