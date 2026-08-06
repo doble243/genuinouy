@@ -7,9 +7,11 @@ import {
   listSavedCarts,
   type SavedCart,
 } from "../lib/savedCarts";
+import { listAdminOrderItems, type AdminOrderItem } from "../lib/orders";
 import { currentCustomer } from "../lib/customerSession";
 import { uy } from "../lib/data";
 import type { AdminOrderRow } from "../lib/orders";
+import { useStore } from "../lib/store";
 import { Arrow, Close } from "./ui";
 
 const STATUS_LABELS: Record<string, { label: string; tone: string }> = {
@@ -20,6 +22,14 @@ const STATUS_LABELS: Record<string, { label: string; tone: string }> = {
   delivered: { label: "Entregado", tone: "bg-emerald-100 text-emerald-800" },
   cancelled: { label: "Cancelado", tone: "bg-rose-100 text-rose-800" },
 };
+
+const STATUS_ORDER: string[] = [
+  "pending",
+  "confirmed",
+  "preparing",
+  "shipped",
+  "delivered",
+];
 
 function fmtDate(iso: string): string {
   try {
@@ -43,12 +53,24 @@ function waLink(phone: string | null | undefined, orderNumber: string) {
 }
 
 export function Account({ onExit }: { onExit: () => void }) {
+  const { products: storeProducts } = useStore();
   const [phone, setPhone] = useState("");
   const [orders, setOrders] = useState<AdminOrderRow[]>([]);
   const [saved, setSaved] = useState<SavedCart[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [orderItems, setOrderItems] = useState<
+    Record<string, AdminOrderItem[]>
+  >({});
+  const [loadingItems, setLoadingItems] = useState<string | null>(null);
+
+  const productById = useMemo(() => {
+    const map = new Map<string, (typeof storeProducts)[number]>();
+    for (const p of storeProducts) map.set(p.id, p);
+    return map;
+  }, [storeProducts]);
 
   const sessionCustomer = useMemo(
     () => currentCustomer() || null,
@@ -110,6 +132,23 @@ export function Account({ onExit }: { onExit: () => void }) {
     } finally {
       setLoading(false);
       setSearched(true);
+    }
+  };
+
+  const toggleOrderDetail = async (orderId: string) => {
+    if (expandedOrderId === orderId) {
+      setExpandedOrderId(null);
+      return;
+    }
+    setExpandedOrderId(orderId);
+    if (!orderItems[orderId]) {
+      setLoadingItems(orderId);
+      try {
+        const items = await listAdminOrderItems(orderId);
+        setOrderItems((prev) => ({ ...prev, [orderId]: items }));
+      } finally {
+        setLoadingItems(null);
+      }
     }
   };
 
@@ -184,12 +223,19 @@ export function Account({ onExit }: { onExit: () => void }) {
                   tone: "bg-ink/5 text-ink/70",
                 };
                 const link = waLink(o.customer_phone, o.order_number || o.id.slice(0, 8));
+                const isOpen = expandedOrderId === o.id;
+                const items = orderItems[o.id];
+                const loadingThis = loadingItems === o.id;
                 return (
                   <li
                     key={o.id}
-                    className="border border-ink/12 bg-white px-4 py-3"
+                    className="border border-ink/12 bg-white"
                   >
-                    <div className="flex items-start justify-between gap-3">
+                    <button
+                      onClick={() => toggleOrderDetail(o.id)}
+                      className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-ink/[0.02]"
+                      aria-expanded={isOpen}
+                    >
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="text-[14px] font-bold">
@@ -211,17 +257,88 @@ export function Account({ onExit }: { onExit: () => void }) {
                           </p>
                         )}
                       </div>
-                      {link && (
-                        <a
-                          href={link}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="shrink-0 bg-[#25D366] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-white hover:bg-[#1DA851]"
-                        >
-          Contactar por WhatsApp
-                        </a>
-                      )}
-                    </div>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        {link && (
+                          <a
+                            href={link}
+                            onClick={(e) => e.stopPropagation()}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="bg-[#25D366] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-white hover:bg-[#1DA851]"
+                          >
+                            WhatsApp
+                          </a>
+                        )}
+                        <span className="text-[10px] uppercase tracking-[0.16em] text-smoke">
+                          {isOpen ? "cerrar ▲" : "detalle ▼"}
+                        </span>
+                      </div>
+                    </button>
+
+                    {isOpen && (
+                      <div className="border-t border-ink/8 px-4 py-4 space-y-4">
+                        <OrderTimeline status={o.status} />
+                        {loadingThis ? (
+                          <p className="text-center text-[12px] text-smoke">
+                            Cargando ítems...
+                          </p>
+                        ) : !items || items.length === 0 ? (
+                          <p className="text-center text-[12px] text-smoke">
+                            Sin ítems registrados.
+                          </p>
+                        ) : (
+                          <ul className="divide-y divide-ink/8 border border-ink/8">
+                            {items.map((it) => {
+                              const product = productById.get(it.product_id);
+                              const image =
+                                product?.image ||
+                                (Array.isArray(product?.images) && product.images[0]) ||
+                                "";
+                              return (
+                                <li
+                                  key={it.id}
+                                  className="flex items-center gap-3 px-3 py-2"
+                                >
+                                  <div className="h-14 w-12 shrink-0 bg-bone-200">
+                                    {image && (
+                                      <img
+                                        src={image}
+                                        alt=""
+                                        className="h-full w-full object-cover"
+                                        loading="lazy"
+                                      />
+                                    )}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate text-[13px] font-semibold">
+                                      {it.product_name || "(producto)"}
+                                    </p>
+                                    <p className="mt-0.5 text-[11.5px] text-smoke">
+                                      {it.quantity} ×{" "}
+                                      {uy(Number(it.unit_price) || 0)}
+                                      {it.unit_type && it.unit_type !== "unidad"
+                                        ? ` · ${it.unit_type}`
+                                        : ""}
+                                    </p>
+                                  </div>
+                                  <span className="text-[13px] font-bold">
+                                    {uy(Number(it.subtotal) || 0)}
+                                  </span>
+                                </li>
+                              );
+                            })}
+                            <li className="flex items-center justify-between gap-3 bg-ink/[0.03] px-3 py-3 text-[13px]">
+                              <span className="font-bold uppercase tracking-[0.12em]">
+                                Total
+                              </span>
+                              <span className="text-[15px] font-extrabold">
+                                {uy(Number(o.total_amount) || 0)}
+                              </span>
+                            </li>
+                          </ul>
+                        )}
+                      </div>
+                    )}
                   </li>
                 );
               })}
@@ -277,5 +394,63 @@ export function Account({ onExit }: { onExit: () => void }) {
         </section>
       </main>
     </div>
+  );
+}
+
+/**
+ * Compact horizontal status timeline (steps with current step highlighted).
+ * Shows the lifecycle for non-cancelled orders; cancelled orders get a banner.
+ */
+function OrderTimeline({ status }: { status: string }) {
+  if (status === "cancelled") {
+    return (
+      <div className="border border-rose-200 bg-rose-50 px-3 py-2 text-[12px] text-rose-700">
+        Este pedido fue cancelado.
+      </div>
+    );
+  }
+  const currentIdx = STATUS_ORDER.indexOf(status);
+  const reached =
+    currentIdx >= 0 ? currentIdx : status === "pending" ? 0 : 0;
+  return (
+    <ol className="flex w-full items-center gap-1">
+      {STATUS_ORDER.map((step, idx) => {
+        const done = idx <= reached;
+        const label = STATUS_LABELS[step]?.label || step;
+        const isLast = idx === STATUS_ORDER.length - 1;
+        return (
+          <li
+            key={step}
+            className="flex flex-1 items-center gap-1"
+          >
+            <div className="flex flex-1 flex-col items-center">
+              <span
+                className={`grid h-6 w-6 place-items-center rounded-full text-[10px] font-bold ${
+                  done
+                    ? "bg-ink text-bone"
+                    : "bg-ink/10 text-smoke"
+                }`}
+              >
+                {done ? "✓" : idx + 1}
+              </span>
+              <span
+                className={`mt-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-center ${
+                  done ? "text-ink" : "text-smoke"
+                }`}
+              >
+                {label}
+              </span>
+            </div>
+            {!isLast && (
+              <span
+                className={`mb-4 h-px w-full ${
+                  idx < reached ? "bg-ink" : "bg-ink/10"
+                }`}
+              />
+            )}
+          </li>
+        );
+      })}
+    </ol>
   );
 }

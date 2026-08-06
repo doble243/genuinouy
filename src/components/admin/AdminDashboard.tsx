@@ -1,6 +1,8 @@
-import { useMemo } from "react";
-import type { AdminProduct } from "../../types/admin";
+import { useEffect, useMemo, useState } from "react";
+import type { AdminProduct, AdminTab } from "../../types/admin";
 import { uy } from "../../lib/data";
+import { supabase } from "../../lib/supabase";
+import { listAdminOrderItems } from "../../lib/orders";
 
 interface AdminDashboardProps {
   products: AdminProduct[];
@@ -8,6 +10,31 @@ interface AdminDashboardProps {
   onSelectProductForEdit: (product: AdminProduct) => void;
   onToggleStock: (productId: string) => void;
   onViewAllProducts: () => void;
+  onNavigateToTab: (tab: AdminTab) => void;
+}
+
+type PendingOrder = {
+  id: string;
+  order_number: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  total_amount: number;
+  created_at: string;
+};
+
+function fmtTimeAgo(iso: string): string {
+  try {
+    const ms = Date.now() - new Date(iso).getTime();
+    const min = Math.floor(ms / 60000);
+    if (min < 1) return "ahora";
+    if (min < 60) return `${min} min`;
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return `${hr} h`;
+    const d = Math.floor(hr / 24);
+    return `${d} d`;
+  } catch {
+    return "";
+  }
 }
 
 export function AdminDashboard({
@@ -16,7 +43,75 @@ export function AdminDashboard({
   onSelectProductForEdit,
   onToggleStock,
   onViewAllProducts,
+  onNavigateToTab,
 }: AdminDashboardProps) {
+  const [pendingOrders, setPendingOrders] = useState<PendingOrder[]>([]);
+  const [itemsByOrder, setItemsByOrder] = useState<Record<string, number>>({});
+
+  const loadPending = async () => {
+    const { data, error } = await supabase
+      .from("orders")
+      .select("id,order_number,customer_name,customer_phone,total_amount,created_at")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (error || !data) return;
+    setPendingOrders(data as PendingOrder[]);
+    // item counts (best-effort, fire-and-forget)
+    const counts: Record<string, number> = {};
+    await Promise.all(
+      (data as PendingOrder[]).map(async (o) => {
+        const items = await listAdminOrderItems(o.id);
+        counts[o.id] = items.length;
+      }),
+    );
+    setItemsByOrder((prev) => ({ ...prev, ...counts }));
+  };
+
+  // Initial fetch on mount.
+  useEffect(() => {
+    loadPending();
+  }, []);
+
+  // Real-time: react to new pending orders + status updates.
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-dashboard-pending")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "orders" },
+        (payload) => {
+          const o = payload.new as PendingOrder & { status?: string };
+          if (o.status === "pending") {
+            setPendingOrders((prev) => {
+              if (prev.some((x) => x.id === o.id)) return prev;
+              return [o, ...prev].slice(0, 20);
+            });
+          }
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "orders" },
+        (payload) => {
+          const o = payload.new as PendingOrder & { status?: string };
+          setPendingOrders((prev) => {
+            if (o.status === "pending") {
+              if (!prev.some((x) => x.id === o.id)) {
+                return [o, ...prev].slice(0, 20);
+              }
+              return prev.map((x) => (x.id === o.id ? o : x));
+            }
+            return prev.filter((x) => x.id !== o.id);
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
   // Calculated stats metrics
   const stats = useMemo(() => {
     const total = products.length;
@@ -91,6 +186,13 @@ export function AdminDashboard({
         {/* Decorative Gold Glow Accent */}
         <div className="absolute -right-16 -bottom-16 w-64 h-64 bg-gold-500/10 rounded-full blur-3xl pointer-events-none" />
       </div>
+
+      {/* Pedidos sin atender (live) */}
+      <PendingOrdersAlert
+        orders={pendingOrders}
+        itemCounts={itemsByOrder}
+        onViewAll={() => onNavigateToTab("orders")}
+      />
 
       {/* Main Stats Overview Cards - Mobile First Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
@@ -368,6 +470,130 @@ export function AdminDashboard({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Pedidos sin atender — lives at the top of the dashboard. Listens (via the
+ * parent's real-time subscription) for new pending orders and shows a live
+ * count + the most recent 3 entries with a deep-link to the orders tab.
+ */
+function PendingOrdersAlert({
+  orders,
+  itemCounts,
+  onViewAll,
+}: {
+  orders: PendingOrder[];
+  itemCounts: Record<string, number>;
+  onViewAll: () => void;
+}) {
+  if (orders.length === 0) {
+    return (
+      <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 flex items-center justify-between gap-4 animate-fade-in">
+        <div className="flex items-center gap-3">
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-emerald-500 text-white">
+            <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </span>
+          <div>
+            <p className="text-[14px] font-bold text-emerald-900">
+              Sin pedidos pendientes
+            </p>
+            <p className="text-[12px] text-emerald-700">
+              Estás al día. Cuando entre un pedido nuevo aparece acá al instante.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border border-amber-300 bg-amber-50 rounded-2xl overflow-hidden animate-fade-in">
+      <div className="bg-amber-100 px-5 py-3 border-b border-amber-200 flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <span className="relative grid h-10 w-10 place-items-center rounded-full bg-amber-500 text-white">
+            <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth={2.2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-rose-500 ring-2 ring-amber-100 animate-pulse" />
+          </span>
+          <div>
+            <p className="text-[14px] font-bold text-amber-900">
+              {orders.length} pedido{orders.length === 1 ? "" : "s"} sin atender
+            </p>
+            <p className="text-[12px] text-amber-800">
+              {orders.length === 1
+                ? "Hay un pedido esperando que lo confirmes."
+                : "Estos pedidos aún no fueron confirmados."}
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onViewAll}
+          className="bg-amber-600 hover:bg-amber-700 text-white text-[12px] font-bold uppercase tracking-[0.14em] px-4 py-2 rounded-lg shadow-sm active:scale-95 transition-all"
+        >
+          Ver pedidos
+        </button>
+      </div>
+
+      <ul className="divide-y divide-amber-200/70">
+        {orders.slice(0, 3).map((o) => {
+          const itemCount = itemCounts[o.id] ?? 0;
+          const phoneDigits = (o.customer_phone || "").replace(/\D/g, "");
+          return (
+            <li
+              key={o.id}
+              className="px-5 py-3 hover:bg-amber-100/60 transition-colors"
+            >
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] font-bold text-ink">
+                      {o.order_number || o.id.slice(0, 8)}
+                    </span>
+                    <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] bg-amber-500 text-white">
+                      Nuevo
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-[12px] text-ink/80">
+                    {o.customer_name || "Cliente sin nombre"}{" "}
+                    <span className="text-ink/50">·</span>{" "}
+                    <span className="text-ink/70">
+                      {uy(Number(o.total_amount) || 0)}
+                    </span>{" "}
+                    <span className="text-ink/50">·</span>{" "}
+                    <span className="text-ink/70">
+                      {fmtTimeAgo(o.created_at)}
+                    </span>
+                    {itemCount > 0 && (
+                      <>
+                        <span className="text-ink/50"> · </span>
+                        <span className="text-ink/70">
+                          {itemCount} ítem{itemCount === 1 ? "" : "s"}
+                        </span>
+                      </>
+                    )}
+                  </p>
+                </div>
+                {phoneDigits && (
+                  <a
+                    href={`https://wa.me/${phoneDigits}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="shrink-0 bg-[#25D366] hover:bg-[#1DA851] text-white text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-2 rounded-lg transition-colors"
+                  >
+                    WhatsApp
+                  </a>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

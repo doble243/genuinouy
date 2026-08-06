@@ -117,6 +117,7 @@ export function AdminPanel({ onExitAdmin }: { onExitAdmin?: () => void }) {
           onSelectProductForEdit={handleEditProduct}
           onToggleStock={handleToggleStock}
           onViewAllProducts={() => setActiveTab("products")}
+          onNavigateToTab={setActiveTab}
         />
       ) : activeTab === "orders" ? (
         <AdminOrdersList />
