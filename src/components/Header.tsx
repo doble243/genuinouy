@@ -126,6 +126,16 @@ export function Header() {
               {wish.length > 0 && <Badge value={wish.length} />}
             </IconBtn>
 
+            <a
+              href="#cuenta"
+              aria-label="Mi cuenta"
+              className="grid h-10 w-10 place-items-center rounded-full text-ink/70 transition-colors hover:bg-ink/[0.05] hover:text-ink"
+            >
+              <svg viewBox="0 0 24 24" fill="none" className="h-[19px] w-[19px]" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </a>
+
             <IconBtn
               label={`Carrito${count > 0 ? ` (${count})` : ""}`}
               onClick={() => setCartOpen(true)}

@@ -6,6 +6,7 @@ import {
   type AdminOrderRow,
   type AdminOrderItem,
 } from "../../lib/orders";
+import { supabase } from "../../lib/supabase";
 import { uy } from "../../lib/data";
 
 const STATUS_LABELS: Record<string, { label: string; tone: string }> = {
@@ -66,6 +67,45 @@ export function AdminOrdersList() {
   useEffect(() => {
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter]);
+
+  // Real-time subscription: prepend new orders, react to status changes.
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-orders")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "orders" },
+        (payload) => {
+          const incoming = payload.new as AdminOrderRow;
+          setOrders((prev) => {
+            if (prev.some((o) => o.id === incoming.id)) return prev;
+            // skip when filter doesn't match
+            if (
+              statusFilter &&
+              incoming.status !== statusFilter
+            ) {
+              return prev;
+            }
+            return [incoming, ...prev];
+          });
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "orders" },
+        (payload) => {
+          const updated = payload.new as AdminOrderRow;
+          setOrders((prev) =>
+            prev.map((o) => (o.id === updated.id ? updated : o)),
+          );
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [statusFilter]);
 
   const handleExpand = async (orderId: string) => {

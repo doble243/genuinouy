@@ -15,6 +15,7 @@ import { AllProducts } from "./components/AllProducts";
 import { ProductDetail } from "./components/ProductDetail";
 import { AdminGate } from "./components/admin/AdminGate";
 import { Checkout } from "./components/Checkout";
+import { Account } from "./components/Account";
 import { StoreProvider } from "./lib/store";
 
 type Route = "home" | "admin" | "checkout" | "cuenta";
@@ -55,6 +56,8 @@ export default function App() {
         <AdminGate onExitAdmin={handleExitAdmin} />
       ) : isCheckout ? (
         <Checkout onExit={() => { window.location.hash = ""; setRoute("home"); }} />
+      ) : route === "cuenta" ? (
+        <Account onExit={() => { window.location.hash = ""; setRoute("home"); }} />
       ) : (
         <div className="min-h-screen bg-bone">
           <Header />
