@@ -1,0 +1,45 @@
+@font-face {
+  font-family: "Genuinos Bodoni";
+  src: url("./fonts/BodoniFLF-Roman.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+}
+
+:root {
+  --genuinos-forest: #3c5c48;
+  --genuinos-ink: #20231f;
+  --genuinos-paper: #fcfbf8;
+  --genuinos-line: color-mix(in srgb, var(--genuinos-forest) 16%, transparent);
+  --genuinos-serif: "Genuinos Bodoni", "Bodoni FLF", Didot, Georgia, serif;
+}
+
+.genuinos-logo { display: block; height: auto; width: 100%; }
+.genuinos-brand { display: inline-flex; align-items: center; color: var(--genuinos-forest); }
+
+/* Header: never use the full lockup here. It is unreadable at navigation scale. */
+.genuinos-header-logo { width: clamp(8.75rem, 10vw, 10.5rem); flex: none; }
+.genuinos-header-logo > img { display: block; width: 100%; height: auto; }
+
+/* Full lockup: hero, footer, printed material and large promotional blocks only. */
+.genuinos-lockup { width: min(29rem, 82vw); max-width: 100%; }
+
+/* Minimum accessible visual size for the compact monogram. */
+.genuinos-monogram { width: 2.5rem; height: 2.5rem; }
+
+.genuinos-display {
+  font-family: var(--genuinos-serif);
+  font-weight: 400;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+@media (max-width: 48rem) {
+  .genuinos-header-logo { width: 7.25rem; }
+  .genuinos-lockup { width: min(21rem, 86vw); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .genuinos-header-logo { transition: transform 180ms ease; }
+  a:hover .genuinos-header-logo { transform: translateY(-1px); }
+}

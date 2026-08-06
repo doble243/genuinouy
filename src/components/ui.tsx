@@ -63,38 +63,6 @@ export function SectionHead({
 }
 
 /* ---------- Logo ---------- */
-export function Logo({
-  className = "h-7",
-  invert = false,
-  glow = false,
-}: {
-  className?: string;
-  invert?: boolean;
-  glow?: boolean;
-}) {
-  return (
-    <img
-      src={LOGO}
-      alt="GENUINOS"
-      width={160}
-      height={40}
-      className={`${className} w-auto object-contain ${
-        invert ? "brightness-0 invert" : ""
-      }`}
-      style={
-        glow
-          ? {
-              filter:
-                "drop-shadow(0 0 8px rgba(212, 168, 83, 0.5)) drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
-            }
-          : undefined
-      }
-      draggable={false}
-    />
-  );
-}
-
-/* Marca de agua: logo enorme, monocromo y apenas visible */
 export function LogoWatermark({
   className = "",
   tone = "light",

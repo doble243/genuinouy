@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 340" role="img" aria-labelledby="title desc">
+  <title id="title">Genuinos Uy — Elegí tu estilo</title>
+  <desc id="desc">Primary Genuinos Uy logo with arrow and tagline</desc>
+  <g fill="#3C5C48" stroke="#3C5C48" font-family="Bodoni FLF, BodoniFLF, Didot, serif">
+    <text x="12" y="154" font-size="157" letter-spacing="-7" stroke="none">GENUINOS</text>
+    <text x="835" y="87" font-size="52" letter-spacing="1" stroke="none">UY</text>
+    <path d="M26 246H350M26 246l25-25M26 246l25 25M350 246l-25-25M350 246l-25 25" fill="none" stroke-width="8" stroke-linecap="square" stroke-linejoin="miter"/>
+    <text x="385" y="270" font-size="67" letter-spacing="1" stroke="none">ELEGÍ TU ESTILO</text>
+  </g>
+</svg>

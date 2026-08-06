@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useStore } from "../lib/store";
-import { Bag, Close, Grid, Heart, Home, Logo, Menu, Search } from "./ui";
+import { Bag, Close, Grid, Heart, Home, Menu, Search } from "./ui";
 
 const NAV = [
   { label: "Nuevos", href: "#nuevos", target: "nuevos" },
@@ -74,10 +74,14 @@ export function Header() {
         <div className="edge mx-auto flex h-[var(--header-h)] max-w-[1600px] items-center justify-between gap-4">
           <a
             href="#top"
-            className="shrink-0 transition-opacity hover:opacity-70"
+            className="genuinos-header-logo shrink-0 transition-opacity hover:opacity-70"
             aria-label="GENUINOS inicio"
           >
-            <Logo className="h-7 md:h-8" />
+            <img
+              src="/assets/genuinos/logo-header-forest.svg"
+              alt="GENUINOS"
+              draggable={false}
+            />
           </a>
 
           <nav
@@ -209,7 +213,13 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
         }`}
       >
         <div className="flex h-[var(--header-h)] items-center justify-between px-5">
-          <Logo className="h-7" />
+          <span className="genuinos-header-logo">
+            <img
+              src="/assets/genuinos/logo-header-forest.svg"
+              alt="GENUINOS"
+              draggable={false}
+            />
+          </span>
           <button
             aria-label="Cerrar menú"
             onClick={onClose}
