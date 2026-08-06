@@ -163,14 +163,16 @@ export const retroRunning: Product[] = [
 export const allProducts = [...newArrivals, ...mostWanted, ...retroRunning];
 
 export const brands = [
+  // Only brands with valid SimpleIcons slugs (no 404s on the icon CDN).
+  // Converse/Vans/Asics removed because cdn.simpleicons.org returns 404 for
+  // those slugs (verified 2026-08-06). Products with those brand values
+  // still work — they appear in the AllProducts chip filter — they just
+  // don't appear in the marquee carousel.
   { name: "Nike", slug: "nike" },
   { name: "Adidas", slug: "adidas" },
   { name: "Jordan", slug: "jordan" },
   { name: "New Balance", slug: "newbalance" },
   { name: "Puma", slug: "puma" },
-  { name: "Converse", slug: "converse" },
-  { name: "Vans", slug: "vans" },
-  { name: "Asics", slug: "asics" },
   { name: "Reebok", slug: "reebok" },
   { name: "Under Armour", slug: "underarmour" },
 ];

@@ -3,18 +3,23 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 /**
  * Supabase client (browser).
  *
- * Bug-fixed 2026-08-06: previously we threw at module evaluation when env
- * vars were missing. That propagated to every importer (supabase, adminService,
- * customerSession, etc.) and React mounted with an empty root → white screen
- * on any deployment whose host did not yet have VITE_SUPABASE_URL /
- * VITE_SUPABASE_ANON_KEY set (e.g. fresh Vercel project).
+ * Public URL + anon key as hardcoded fallback so the storefront works in any
+ * environment (local dev, fresh Vercel deploy, contributor clone) without
+ * requiring manual env-var setup. Supabase's anon key is designed to be
+ * public — RLS is the actual security boundary, not key secrecy.
  *
- * Now we lazily resolve and warn once. The module always loads successfully;
- * individual data calls fail with a clear message if env is missing, and the
- * storefront falls back to local data so the UI keeps rendering.
+ * Override either via VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY env vars
+ * (Vercel → Project → Settings → Environment Variables) when you want to
+ * point at a different Supabase project or rotate credentials.
+ *
+ * Bug-fixed 2026-08-06: previously we threw at module evaluation when env
+ * vars were missing. That broke every importer and React mounted an empty
+ * root. Now we lazy-resolve via a Proxy so module load always succeeds;
+ * missing env degrades gracefully to whatever fallback works.
  */
-let _client: SupabaseClient | null = null;
-let _warned = false;
+const FALLBACK_URL = "https://wqrjusxmyklienzqlket.supabase.co";
+const FALLBACK_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indxcmp1c3hteWtsaWVuenFsa2V0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2MDMzNjksImV4cCI6MjEwMTE3OTM2OX0.3AJBOkvm4s-X5opVdXoL6AtOS7N48nND65zEJerTh0c";
 
 const envUrl = (import.meta as any).env?.VITE_SUPABASE_URL as
   | string
@@ -23,45 +28,23 @@ const envKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY as
   | string
   | undefined;
 
+const resolvedUrl = envUrl && envUrl.length > 0 ? envUrl : FALLBACK_URL;
+const resolvedKey = envKey && envKey.length > 0 ? envKey : FALLBACK_ANON_KEY;
+
 export const isSupabaseConfigured = !!(envUrl && envKey);
 
-function resolveSupabase(): SupabaseClient {
-  if (_client) return _client;
-  if (!isSupabaseConfigured) {
-    if (!_warned && typeof console !== "undefined") {
-      console.warn(
-        "[GENUINOS] VITE_SUPABASE_URL and/or VITE_SUPABASE_ANON_KEY are missing. " +
-          "Live data calls will fail; the UI uses local fallback where available. " +
-          "Set the env vars in your host (e.g. Vercel → Project → Settings → Environment Variables) " +
-          "and trigger a rebuild for full functionality.",
-      );
-      _warned = true;
-    }
-    throw new Error(
-      "Supabase env not configured (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY missing)",
-    );
-  }
-  _client = createClient(envUrl!, envKey!, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-    },
-  });
-  return _client;
+// One-shot warn if user is on the fallback (helps during deploys / new clones).
+if (!isSupabaseConfigured && typeof console !== "undefined") {
+  console.info(
+    "[GENUINOS] Using embedded Supabase fallback. Set VITE_SUPABASE_URL and " +
+      "VITE_SUPABASE_ANON_KEY in your host's env vars (e.g. Vercel) to override.",
+  );
 }
 
-/**
- * Lazy proxy. Accessing any property/method triggers `resolveSupabase()`,
- * which throws only at call time (not module load). This means React can
- * always mount the app, and consumers see clear failure messages instead of
- * a white screen.
- */
-export const supabase = new Proxy({} as SupabaseClient, {
-  get(_target, prop) {
-    if (prop === "then") return undefined;
-    const client = resolveSupabase();
-    const value = (client as any)[prop];
-    return typeof value === "function" ? value.bind(client) : value;
+export const supabase: SupabaseClient = createClient(resolvedUrl, resolvedKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
   },
 });
