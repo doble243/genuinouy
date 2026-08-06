@@ -56,6 +56,10 @@ export function mapDbToProduct(item: DbProductRow | any): Product {
     brand: item.brand || "",
     name: item.name || "",
     price: Number(item.price) || 0,
+    compareAt:
+      item.compare_at !== undefined && item.compare_at !== null
+        ? Number(item.compare_at)
+        : undefined,
     image: mainImage,
     hover: hoverImage,
     isNew: item.category === "Nuevos Ingresos" || Boolean(item.featured),
@@ -101,6 +105,7 @@ export async function createProduct(input: CreateProductInput): Promise<Product>
     name: input.name,
     brand: input.brand,
     price: input.price,
+    compare_at: input.compareAt ?? null,
     category: input.category || "General",
     gender: input.gender || "Unisex",
     description: input.description || "",
@@ -145,6 +150,7 @@ export async function updateProduct(
   if (input.name !== undefined) dbPayload.name = input.name;
   if (input.brand !== undefined) dbPayload.brand = input.brand;
   if (input.price !== undefined) dbPayload.price = input.price;
+  if (input.compareAt !== undefined) dbPayload.compare_at = input.compareAt ?? null;
   if (input.category !== undefined) dbPayload.category = input.category;
   if (input.gender !== undefined) dbPayload.gender = input.gender;
   if (input.description !== undefined) dbPayload.description = input.description;
