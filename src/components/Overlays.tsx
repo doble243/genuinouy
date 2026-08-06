@@ -135,7 +135,13 @@ export function CartDrawer() {
                   "Envío calculado al finalizar la compra"
                 )}
               </p>
-              <button className="group mt-4 flex w-full items-center justify-center gap-2 bg-ink py-4 text-[12px] font-bold uppercase tracking-[0.18em] text-bone transition-colors hover:bg-obsidian">
+              <button
+                onClick={() => {
+                  setCartOpen(false);
+                  window.location.hash = "#checkout";
+                }}
+                className="group mt-4 flex w-full items-center justify-center gap-2 bg-ink py-4 text-[12px] font-bold uppercase tracking-[0.18em] text-bone transition-colors hover:bg-obsidian"
+              >
                 Finalizar compra
                 <Arrow className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
               </button>
