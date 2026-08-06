@@ -164,6 +164,36 @@ export function AdminLayout({
 
           <button
             type="button"
+            onClick={() => setActiveTab("orders")}
+            className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-lg text-xs font-semibold tracking-wide transition-all ${
+              activeTab === "orders"
+                ? "bg-ink text-gold-400 border-l-4 border-gold-500 pl-2.5"
+                : "text-smoke hover:text-bone hover:bg-ink/40"
+            }`}
+          >
+            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+            Pedidos
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("customers")}
+            className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-lg text-xs font-semibold tracking-wide transition-all ${
+              activeTab === "customers"
+                ? "bg-ink text-gold-400 border-l-4 border-gold-500 pl-2.5"
+                : "text-smoke hover:text-bone hover:bg-ink/40"
+            }`}
+          >
+            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            Clientes
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab("hero")}
             className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-lg text-xs font-semibold tracking-wide transition-all ${
               activeTab === "hero"
@@ -221,6 +251,10 @@ export function AdminLayout({
               <span className="font-bold text-bone uppercase tracking-wider">
                 {activeTab === "dashboard"
                   ? "Dashboard Stats"
+                  : activeTab === "orders"
+                  ? "Pedidos"
+                  : activeTab === "customers"
+                  ? "Clientes"
                   : activeTab === "hero"
                   ? "Hero / Carrusel"
                   : "Gestión de Productos"}
@@ -296,6 +330,22 @@ export function AdminLayout({
           <span className="text-[10px] tracking-tight">Productos</span>
         </button>
 
+        {/* Pedidos Button */}
+        <button
+          type="button"
+          onClick={() => setActiveTab("orders")}
+          className={`flex flex-col items-center justify-center min-w-[64px] min-h-[48px] py-1 px-2 rounded-xl transition-all ${
+            activeTab === "orders"
+              ? "text-gold-400 font-bold bg-white/5"
+              : "text-smoke hover:text-bone"
+          }`}
+        >
+          <svg className="w-5 h-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={activeTab === "orders" ? 2.2 : 1.7}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          <span className="text-[10px] tracking-tight">Pedidos</span>
+        </button>
+
         {/* Prominent Gold "+ Nuevo" Button */}
         <button
           type="button"
@@ -306,6 +356,22 @@ export function AdminLayout({
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.8}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
+        </button>
+
+        {/* Clientes Button */}
+        <button
+          type="button"
+          onClick={() => setActiveTab("customers")}
+          className={`flex flex-col items-center justify-center min-w-[64px] min-h-[48px] py-1 px-2 rounded-xl transition-all ${
+            activeTab === "customers"
+              ? "text-gold-400 font-bold bg-white/5"
+              : "text-smoke hover:text-bone"
+          }`}
+        >
+          <svg className="w-5 h-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={activeTab === "customers" ? 2.2 : 1.7}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span className="text-[10px] tracking-tight">Clientes</span>
         </button>
 
         {/* Hero Button */}

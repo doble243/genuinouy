@@ -4,6 +4,8 @@ import { AdminDashboard } from "./AdminDashboard";
 import { AdminProductList } from "./AdminProductList";
 import { AdminProductFormModal } from "./AdminProductFormModal";
 import { AdminHeroManager } from "./AdminHeroManager";
+import { AdminOrdersList } from "./AdminOrdersList";
+import { AdminCustomersList } from "./AdminCustomersList";
 import type { AdminProduct, AdminTab } from "../../types/admin";
 import { useStore } from "../../lib/store";
 
@@ -116,6 +118,10 @@ export function AdminPanel({ onExitAdmin }: { onExitAdmin?: () => void }) {
           onToggleStock={handleToggleStock}
           onViewAllProducts={() => setActiveTab("products")}
         />
+      ) : activeTab === "orders" ? (
+        <AdminOrdersList />
+      ) : activeTab === "customers" ? (
+        <AdminCustomersList />
       ) : activeTab === "hero" ? (
         <AdminHeroManager />
       ) : (

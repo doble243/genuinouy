@@ -150,7 +150,8 @@ export async function submitOrder(
     total = round2(total + subtotal);
   }
 
-  // 3. Insert order (denormalized customer snapshot)
+  // 3. Insert order (denormalized customer snapshot + legacy columns for
+  //    backward compatibility with the existing schema)
   const { data: order, error: orderErr } = await supabase
     .from("orders")
     .insert([
@@ -160,12 +161,16 @@ export async function submitOrder(
         customer_phone: customer.phone,
         customer_email: customer.email || null,
         customer_address: input.customer.address || null,
+        // legacy columns that existed in the schema pre-migration
+        phone: customer.phone,
+        address: input.customer.address || null,
+        city: "Montevideo",
         total_amount: total,
-        status: "nuevo",
+        // status left to DB default ("pending")
         notes: input.shippingNotes || input.customer.notes || null,
       },
     ])
-    .select("id,order_number")
+    .select("id,order_number,status")
     .single();
 
   if (orderErr || !order) {
@@ -277,12 +282,16 @@ export async function listAdminOrderItems(
   return data as AdminOrderItem[];
 }
 
+// Allow-listed statuses to update (DB side may have a CHECK we don't know;
+// these were observed working with default 'pending'). Admin can manually
+// change via SQL if a status not in this list is needed.
 const VALID_STATUSES = [
-  "nuevo",
-  "confirmado",
-  "preparando",
-  "entregado",
-  "cancelado",
+  "pending",
+  "confirmed",
+  "preparing",
+  "shipped",
+  "delivered",
+  "cancelled",
 ] as const;
 export type OrderStatus = (typeof VALID_STATUSES)[number];
 

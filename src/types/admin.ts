@@ -24,7 +24,12 @@ export type HeroSlide = {
   createdAt?: string;
 };
 
-export type AdminTab = "dashboard" | "products" | "hero";
+export type AdminTab =
+  | "dashboard"
+  | "products"
+  | "orders"
+  | "customers"
+  | "hero";
 
 export type StoreOption = {
   id: string;

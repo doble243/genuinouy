@@ -2,12 +2,113 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { uy } from "../lib/data";
 import { useStore } from "../lib/store";
 import { Arrow, Close, Heart, LogoWatermark, Minus, Plus, Search } from "./ui";
+import { currentCustomer } from "../lib/customerSession";
+import {
+  listSavedCarts,
+  saveCart,
+  deleteSavedCart,
+  type SavedCart,
+  type SavedCartLine,
+} from "../lib/savedCarts";
 
 /* ------------------------- CARRITO ------------------------- */
 export function CartDrawer() {
-  const { cartOpen, setCartOpen, lines, setQty, remove, total, count } =
-    useStore();
+  const {
+    cartOpen,
+    setCartOpen,
+    lines,
+    setQty,
+    remove,
+    add,
+    total,
+    count,
+    notify,
+  } = useStore();
   const free = total >= 4500;
+  const [savedCarts, setSavedCarts] = useState<SavedCart[]>([]);
+  const [savingName, setSavingName] = useState("");
+  const [savedExpanded, setSavedExpanded] = useState(false);
+  const [loadingSaved, setLoadingSaved] = useState(false);
+
+  const customerId = useMemo(() => currentCustomer()?.id || null, [cartOpen]);
+
+  const refreshSaved = useMemo(
+    () => async () => {
+      setLoadingSaved(true);
+      try {
+        const rows = await listSavedCarts(customerId);
+        setSavedCarts(rows);
+      } finally {
+        setLoadingSaved(false);
+      }
+    },
+    [customerId],
+  );
+
+  useEffect(() => {
+    if (cartOpen) refreshSaved();
+  }, [cartOpen, refreshSaved]);
+
+  const lineSnapshots: SavedCartLine[] = useMemo(
+    () =>
+      lines.map((l) => ({
+        productId: l.product.id,
+        productName: l.product.name,
+        productBrand: l.product.brand,
+        productImage: l.product.image,
+        productPrice: l.product.price,
+        size: l.size,
+        qty: l.qty,
+      })),
+    [lines],
+  );
+
+  const handleSaveCart = async () => {
+    if (!lines.length) return;
+    const name = savingName.trim() || `Carrito ${new Date().toLocaleDateString("es-UY")}`;
+    const res = await saveCart(customerId, name, lineSnapshots);
+    if (res.ok) {
+      notify(`Guardamos "${name}"`, "success", "Carrito guardado");
+      setSavingName("");
+      refreshSaved();
+    } else {
+      notify(res.error || "No se pudo guardar", "error");
+    }
+  };
+
+  const handleLoadSaved = (sc: SavedCart) => {
+    if (!Array.isArray(sc.items) || sc.items.length === 0) return;
+    let added = 0;
+    for (const it of sc.items) {
+      // we need a Product-like object for store.add(); build minimal version
+      const product = {
+        id: it.productId,
+        name: it.productName,
+        brand: it.productBrand || "",
+        price: it.productPrice,
+        image: it.productImage || "",
+        hover: it.productImage || "",
+        sizes: [it.size],
+      } as any;
+      for (let i = 0; i < it.qty; i++) {
+        add(product, it.size);
+        added += 1;
+      }
+    }
+    notify(
+      added === 1 ? "1 producto cargado" : `${added} productos cargados`,
+      "success",
+      sc.name,
+    );
+  };
+
+  const handleDeleteSaved = async (id: string) => {
+    const ok = await deleteSavedCart(id);
+    if (ok) {
+      notify("Carrito eliminado", "info");
+      refreshSaved();
+    }
+  };
 
   return (
     <div
@@ -59,9 +160,81 @@ export function CartDrawer() {
             >
               Seguir viendo
             </button>
+
+            {savedCarts.length > 0 && (
+              <div className="relative mt-8 w-full px-2 text-left">
+                <button
+                  onClick={() => setSavedExpanded((v) => !v)}
+                  className="flex w-full items-center justify-between text-[11px] font-bold uppercase tracking-[0.18em] text-smoke"
+                >
+                  <span>Tus carritos guardados ({savedCarts.length})</span>
+                  <span>{savedExpanded ? "−" : "+"}</span>
+                </button>
+                {savedExpanded && (
+                  <ul className="mt-3 space-y-2">
+                    {savedCarts.map((sc) => (
+                      <li
+                        key={sc.id}
+                        className="flex items-center justify-between border border-ink/12 px-3 py-2 text-[12px]"
+                      >
+                        <span className="truncate">{sc.name}</span>
+                        <button
+                          onClick={() => handleLoadSaved(sc)}
+                          className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink underline-offset-2 hover:underline"
+                        >
+                          Cargar
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <>
+            {savedCarts.length > 0 && (
+              <div className="border-b border-ink/8 px-5 py-3">
+                <button
+                  onClick={() => setSavedExpanded((v) => !v)}
+                  className="flex w-full items-center justify-between text-[11px] font-bold uppercase tracking-[0.18em] text-smoke"
+                >
+                  <span>
+                    Carritos guardados ({savedCarts.length})
+                  </span>
+                  <span>{savedExpanded ? "−" : "+"}</span>
+                </button>
+                {savedExpanded && (
+                  <ul className="mt-3 space-y-1.5">
+                    {savedCarts.map((sc) => (
+                      <li
+                        key={sc.id}
+                        className="flex items-center justify-between gap-2 border border-ink/12 px-3 py-2 text-[12px]"
+                      >
+                        <span className="truncate font-semibold">{sc.name}</span>
+                        <span className="text-[10.5px] text-smoke">
+                          {sc.items.length} ítem{sc.items.length === 1 ? "" : "s"}
+                        </span>
+                        <div className="flex shrink-0 gap-2 text-[11px]">
+                          <button
+                            onClick={() => handleLoadSaved(sc)}
+                            className="font-semibold uppercase tracking-[0.12em] text-ink underline-offset-2 hover:underline"
+                          >
+                            Cargar
+                          </button>
+                          <button
+                            onClick={() => handleDeleteSaved(sc.id)}
+                            className="text-smoke underline-offset-2 hover:text-ink hover:underline"
+                          >
+                            Borrar
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
             <div className="flex-1 overflow-y-auto px-5">
               {lines.map((l) => (
                 <div
@@ -135,12 +308,27 @@ export function CartDrawer() {
                   "Envío calculado al finalizar la compra"
                 )}
               </p>
+              <div className="mt-3 flex items-center gap-2">
+                <input
+                  value={savingName}
+                  onChange={(e) => setSavingName(e.target.value)}
+                  placeholder="Nombre del carrito"
+                  className="flex-1 border border-ink/15 bg-transparent px-3 py-2 text-[12.5px] outline-none transition-colors focus:border-ink"
+                />
+                <button
+                  onClick={handleSaveCart}
+                  disabled={loadingSaved}
+                  className="shrink-0 border border-ink/15 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/80 transition-colors hover:border-ink hover:bg-ink hover:text-bone disabled:opacity-50"
+                >
+                  Guardar
+                </button>
+              </div>
               <button
                 onClick={() => {
                   setCartOpen(false);
                   window.location.hash = "#checkout";
                 }}
-                className="group mt-4 flex w-full items-center justify-center gap-2 bg-ink py-4 text-[12px] font-bold uppercase tracking-[0.18em] text-bone transition-colors hover:bg-obsidian"
+                className="group mt-3 flex w-full items-center justify-center gap-2 bg-ink py-4 text-[12px] font-bold uppercase tracking-[0.18em] text-bone transition-colors hover:bg-obsidian"
               >
                 Finalizar compra
                 <Arrow className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
