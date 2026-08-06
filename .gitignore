@@ -4,3 +4,8 @@ dist
 .atl
 .DS_Store
 *.log
+
+# Local env files (NEVER commit)
+.env
+.env.local
+.env.*.local
