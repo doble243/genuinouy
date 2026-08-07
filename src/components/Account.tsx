@@ -12,6 +12,7 @@ import { currentCustomer } from "../lib/customerSession";
 import { uy } from "../lib/data";
 import type { AdminOrderRow } from "../lib/orders";
 import { useStore } from "../lib/store";
+import { customerWhatsappUrl } from "../lib/whatsapp";
 import { Arrow, Close } from "./ui";
 
 const STATUS_LABELS: Record<string, { label: string; tone: string }> = {
@@ -44,12 +45,7 @@ function fmtDate(iso: string): string {
 }
 
 function waLink(phone: string | null | undefined, orderNumber: string) {
-  const cleanPhone = (phone || "").replace(/\D/g, "");
-  if (!cleanPhone) return null;
-  const text = encodeURIComponent(
-    `Hola! Quiero saber sobre mi pedido ${orderNumber} en GENUINOS.`,
-  );
-  return `https://wa.me/${cleanPhone}?text=${text}`;
+  return customerWhatsappUrl(phone, orderNumber);
 }
 
 export function Account({ onExit }: { onExit: () => void }) {
