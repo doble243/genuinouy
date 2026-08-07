@@ -17,13 +17,13 @@ const STATUS_LABEL: Record<string, string> = {
 
 const STATUS_LINES: Record<string, string> = {
   pending:
-    "lo acabamos de recibir y queremos confirmar la entrega y el pago. ¿Coordinamos?",
+    "estamos consultando stock de tu pedido y te avisaremos a la brevedad con la confirmación. ¡Gracias por elegir GENUINOS!",
   confirmed:
-    "ya está confirmado y entró a preparación. Te avisamos cuando salga a reparto.",
+    "lo confirmamos y entró a preparación. ¿Coordinamos entrega y pago ahora? Te avisamos cuando salga a reparto.",
   preparing:
     "lo estamos armando. Te avisamos cuando esté listo para enviar.",
   shipped:
-    "ya va en camino a tu dirección con el seguimiento que corresponda.",
+    "ya va en camino a tu dirección con el seguimiento correspondiente.",
   delivered:
     "ya fue entregado. ¡Gracias por confiar en GENUINOS! Si quedó alguna duda o querés hacer cambio de talle, escribinos sin problema.",
   cancelled:
