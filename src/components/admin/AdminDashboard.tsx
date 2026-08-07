@@ -3,6 +3,7 @@ import type { AdminProduct, AdminTab } from "../../types/admin";
 import { uy } from "../../lib/data";
 import { supabase } from "../../lib/supabase";
 import { listAdminOrderItems } from "../../lib/orders";
+import { adminWhatsappUrl } from "../../lib/whatsapp";
 
 interface AdminDashboardProps {
   products: AdminProduct[];
@@ -18,7 +19,9 @@ type PendingOrder = {
   order_number: string | null;
   customer_name: string | null;
   customer_phone: string | null;
+  customer_email?: string | null;
   total_amount: number;
+  status: string;
   created_at: string;
 };
 
@@ -543,7 +546,12 @@ function PendingOrdersAlert({
       <ul className="divide-y divide-amber-200/70">
         {orders.slice(0, 3).map((o) => {
           const itemCount = itemCounts[o.id] ?? 0;
-          const phoneDigits = (o.customer_phone || "").replace(/\D/g, "");
+          const waUrl = adminWhatsappUrl(
+            o.customer_phone,
+            o.order_number || o.id.slice(0, 8),
+            o.status || "pending",
+            o.customer_name,
+          );
           return (
             <li
               key={o.id}
@@ -579,9 +587,9 @@ function PendingOrdersAlert({
                     )}
                   </p>
                 </div>
-                {phoneDigits && (
+                {waUrl && (
                   <a
-                    href={`https://wa.me/${phoneDigits}`}
+                    href={waUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="shrink-0 bg-[#25D366] hover:bg-[#1DA851] text-white text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-2 rounded-lg transition-colors"

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { genericWhatsappUrl } from "../../lib/whatsapp";
 
 type CustomerRow = {
   id: string;
@@ -138,7 +139,32 @@ export function AdminCustomersList() {
                     </p>
                   )}
                 </td>
-                <td className="px-3 py-2 text-smoke">{r.phone}</td>
+                <td className="px-3 py-2 text-smoke">
+                  {(() => {
+                    const link = genericWhatsappUrl(r.phone, r.name);
+                    return (
+                      <a
+                        href={link || "#"}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-disabled={!link}
+                        onClick={(e) => !link && e.preventDefault()}
+                        className={`underline-offset-2 ${
+                          link
+                            ? "text-[#25D366] font-semibold hover:underline"
+                            : "text-smoke cursor-not-allowed"
+                        }`}
+                        title={
+                          link
+                            ? "Abrir WhatsApp con mensaje pre-armado"
+                            : "Sin número"
+                        }
+                      >
+                        {r.phone}
+                      </a>
+                    );
+                  })()}
+                </td>
                 <td className="px-3 py-2 text-smoke">{r.email || "—"}</td>
                 <td className="px-3 py-2">
                   {editingId === r.id ? (
@@ -202,12 +228,38 @@ export function AdminCustomersList() {
                       </button>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => beginEdit(r)}
-                      className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70 underline-offset-2 hover:text-ink hover:underline"
-                    >
-                      Editar
-                    </button>
+                    <div className="flex justify-end gap-2">
+                      {(() => {
+                        const link = genericWhatsappUrl(r.phone, r.name);
+                        return (
+                          <a
+                            href={link || "#"}
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-disabled={!link}
+                            onClick={(e) => !link && e.preventDefault()}
+                            className={`text-[11px] font-semibold uppercase tracking-[0.12em] ${
+                              link
+                                ? "bg-[#25D366] text-white px-2 py-1.5 hover:bg-[#1DA851]"
+                                : "bg-bone-300 text-smoke cursor-not-allowed px-2 py-1.5"
+                            }`}
+                            title={
+                              link
+                                ? "Abrir WhatsApp al cliente"
+                                : "Sin número de WhatsApp"
+                            }
+                          >
+                            WhatsApp
+                          </a>
+                        );
+                      })()}
+                      <button
+                        onClick={() => beginEdit(r)}
+                        className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/70 underline-offset-2 hover:text-ink hover:underline"
+                      >
+                        Editar
+                      </button>
+                    </div>
                   )}
                 </td>
               </tr>

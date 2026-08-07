@@ -53,6 +53,29 @@ export function customerWhatsappUrl(
 }
 
 /**
+ * Generic admin→customer / customer→admin opener when there is NO order
+ * context (e.g. admin looking at the customer list, or a follow-up after
+ * the order is delivered). Always includes a greeting + the brand name so
+ * the customer knows who is contacting them.
+ */
+export function genericWhatsappUrl(
+  phone: string | null | undefined,
+  customerName?: string | null,
+  hint?: string,
+): string | null {
+  const firstName = (customerName || "").trim().split(/\s+/)[0];
+  const greeting = firstName ? `Hola ${firstName}, ` : "Hola, ";
+  const tail = hint
+    ? ` ${hint}`
+    : " ¿Te podemos ayudar con algo?";
+  const text = `${greeting}te escribimos de GENUINOS.${tail}`;
+  return waUrl(phone, text);
+}
+
+/** Alias kept for readability in the customer-list surfaces. */
+export const customerAccountWhatsappUrl = genericWhatsappUrl;
+
+/**
  * Admin-facing message tailored to the order's current status. Includes the
  * customer's first name (when available) and a status-specific line that
  * tells them where the order stands + what the next step is.
