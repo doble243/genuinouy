@@ -13,6 +13,7 @@ import {
   newArrivals as fallbackNewArrivals,
   mostWanted as fallbackMostWanted,
   type Product,
+  type ProductVariant,
 } from "./data";
 import {
   fetchProducts,
@@ -30,7 +31,21 @@ export type CartLine = {
   product: Product;
   size: string;
   qty: number;
+  /** When the line came from a product variant (size/color with a custom image),
+   *  this carries the variant reference so the cart/checkout/order pipeline
+   *  retains the per-variant context end-to-end. */
+  variant?: ProductVariant;
 };
+
+/** Build a stable, unique key for a cart line. Variant-aware so two variants
+ *  of the same product (e.g. Negro vs Azul) don't collapse into one line. */
+export function makeCartLineKey(
+  productId: string,
+  size: string,
+  variantId?: string,
+): string {
+  return variantId ? `${productId}-${size}-${variantId}` : `${productId}-${size}`;
+}
 
 export type ToastNotification = {
   id: string;
@@ -45,7 +60,7 @@ type Ctx = {
   mostWanted: Product[];
   allProducts: Product[];
   lines: CartLine[];
-  add: (p: Product, size: string) => void;
+  add: (p: Product, size: string, variant?: ProductVariant) => void;
   setQty: (key: string, qty: number) => void;
   remove: (key: string) => void;
   count: number;
@@ -163,16 +178,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [products]
   );
 
-  const add = useCallback((p: Product, size: string) => {
-    const key = `${p.id}-${size}`;
-    setLines((prev) => {
-      const found = prev.find((l) => l.key === key);
-      if (found)
-        return prev.map((l) => (l.key === key ? { ...l, qty: l.qty + 1 } : l));
-      return [...prev, { key, product: p, size, qty: 1 }];
-    });
-    setCartOpen(true);
-  }, []);
+  const add = useCallback(
+    (p: Product, size: string, variant?: ProductVariant) => {
+      const key = makeCartLineKey(p.id, size, variant?.id);
+      setLines((prev) => {
+        const found = prev.find((l) => l.key === key);
+        if (found)
+          return prev.map((l) =>
+            l.key === key ? { ...l, qty: l.qty + 1 } : l,
+          );
+        return [...prev, { key, product: p, size, qty: 1, variant }];
+      });
+      setCartOpen(true);
+    },
+    [],
+  );
 
   const setQty = useCallback((key: string, qty: number) => {
     setLines((prev) =>

@@ -313,6 +313,11 @@ export function Account({ onExit }: { onExit: () => void }) {
                                     <p className="truncate text-[13px] font-semibold">
                                       {it.product_name || "(producto)"}
                                     </p>
+                                    {it.variant_label && (
+                                      <p className="mt-0.5 truncate text-[11px] text-gold-600 font-semibold">
+                                        {it.variant_label}
+                                      </p>
+                                    )}
                                     <p className="mt-0.5 text-[11.5px] text-smoke">
                                       {it.quantity} ×{" "}
                                       {uy(Number(it.unit_price) || 0)}

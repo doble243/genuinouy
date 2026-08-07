@@ -242,7 +242,7 @@ export function CartDrawer() {
                   className="flex gap-4 border-b border-ink/8 py-4"
                 >
                   <img
-                    src={l.product.image}
+                    src={l.variant?.image || l.product.image}
                     alt=""
                     className="h-24 w-20 shrink-0 bg-bone-200 object-cover"
                     loading="lazy"
@@ -255,7 +255,9 @@ export function CartDrawer() {
                       {l.product.name}
                     </h3>
                     <p className="mt-0.5 text-[12px] text-smoke">
-                      Talle {l.size}
+                      {l.variant
+                        ? l.variant.label
+                        : `Talle ${l.size}`}
                     </p>
                     <div className="mt-2.5 flex items-center justify-between">
                       <div className="flex items-center border border-ink/12">

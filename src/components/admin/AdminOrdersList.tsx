@@ -289,6 +289,21 @@ export function AdminOrdersList() {
                               <p className="truncate text-[13px] font-semibold">
                                 {it.product_name || "(producto eliminado)"}
                               </p>
+                              {it.variant_label && (
+                                <p className="truncate text-[11px] text-gold-600 font-semibold">
+                                  {it.variant_label}
+                                </p>
+                              )}
+                              {it.variant_image && (
+                                <span className="relative mt-1 inline-block h-8 w-8 overflow-hidden border border-ink/10 align-middle">
+                                  <img
+                                    src={it.variant_image}
+                                    alt=""
+                                    className="h-full w-full object-cover"
+                                    loading="lazy"
+                                  />
+                                </span>
+                              )}
                               <p className="text-[11.5px] text-smoke">
                                 {it.quantity} × {uy(Number(it.unit_price) || 0)}{" "}
                                 · {it.unit_type || "unidad"}

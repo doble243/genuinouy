@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { uy, type Product } from "../lib/data";
+import { uy, type Product, type ProductVariant } from "../lib/data";
 import { useStore } from "../lib/store";
 import { ChevronLeft, ChevronRight, Close, Heart } from "./ui";
 import { ProductCard } from "./ProductCard";
@@ -15,15 +15,22 @@ export function ProductDetail() {
     toggleWish,
   } = useStore();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedVariant, setSelectedVariant] =
+    useState<ProductVariant | null>(null);
   const [activeImage, setActiveImage] = useState<string | null>(null);
 
   const open = selectedProduct !== null;
   const product = selectedProduct;
   const liked = product !== null && wish.includes(product.id);
 
+  const hasVariants = !!(
+    product?.variants && product.variants.length > 0
+  );
+
   // Reset local state whenever the selected product changes
   useEffect(() => {
     setSelectedSize(null);
+    setSelectedVariant(null);
     setActiveImage(product?.image ?? null);
   }, [product?.id, product?.image]);
 
@@ -46,10 +53,12 @@ export function ProductDetail() {
       .slice(0, 4);
   }, [product, products]);
 
+  // Either pick a variant (preferred when present) or a fallback size from
+  // the legacy sizes[] array. canAdd requires ONE of them.
   const canAdd =
     product !== null &&
     product.inStock !== false &&
-    selectedSize !== null;
+    (selectedVariant !== null || selectedSize !== null);
 
   const currentIndex = useMemo(() => {
     if (!product) return -1;
@@ -71,14 +80,44 @@ export function ProductDetail() {
   }
 
   function handleAdd() {
-    if (!product || !selectedSize) return;
-    add(product, selectedSize);
-    notify(
-      `${product.name} (talle ${selectedSize}) agregado al carrito`,
-      "success",
-      "Carrito"
-    );
+    if (!product) return;
+    if (selectedVariant) {
+      add(
+        product,
+        selectedVariant.value,
+        selectedVariant,
+      );
+      notify(
+        `${product.name} (${selectedVariant.label}) agregado al carrito`,
+        "success",
+        "Carrito",
+      );
+    } else if (selectedSize) {
+      add(product, selectedSize);
+      notify(
+        `${product.name} (talle ${selectedSize}) agregado al carrito`,
+        "success",
+        "Carrito",
+      );
+    } else {
+      return;
+    }
     close();
+  }
+
+  /**
+   * When a variant is selected, swap the main image to the variant photo
+   * (if assigned). This is what gives the customer visual confirmation
+   * they picked the right colorway / size.
+   */
+  function pickVariant(v: ProductVariant) {
+    setSelectedVariant(v);
+    setActiveImage(v.image || activeImage || product?.image || null);
+  }
+
+  function pickSize(size: string) {
+    setSelectedSize(size);
+    setSelectedVariant(null);
   }
 
   return (
@@ -254,32 +293,80 @@ export function ProductDetail() {
 
             {/* Sticky bottom action area — always visible on mobile */}
             <div className="shrink-0 border-t border-ink/8 bg-bone/95 px-5 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] backdrop-blur-md shadow-[0_-12px_28px_-18px_rgba(0,0,0,0.18)] md:px-7 md:pt-5">
-              <p className="mb-2.5 text-[10.5px] font-bold uppercase tracking-[0.2em] text-smoke">
-                Talle
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {product.sizes.map((s) => {
-                  const isSelected = selectedSize === s;
-                  const disabled = product.inStock === false;
-                  return (
-                    <button
-                      key={s}
-                      type="button"
-                      disabled={disabled}
-                      onClick={() => setSelectedSize(s)}
-                      className={`min-w-[52px] border px-3 py-2.5 text-[13px] font-semibold tracking-[-0.01em] transition-colors duration-200 ${
-                        disabled
-                          ? "cursor-not-allowed border-ink/8 bg-bone-200 text-smoke"
-                          : isSelected
-                          ? "border-gold-500 bg-gold-500 text-ink"
-                          : "border-ink/15 bg-bone text-ink hover:border-ink"
-                      }`}
-                    >
-                      {s}
-                    </button>
-                  );
-                })}
-              </div>
+              {hasVariants ? (
+                <>
+                  <p className="mb-2.5 text-[10.5px] font-bold uppercase tracking-[0.2em] text-smoke">
+                    Variantes
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {product!.variants!.map((v) => {
+                      const isSelected = selectedVariant?.id === v.id;
+                      const disabled = v.in_stock === false;
+                      return (
+                        <button
+                          key={v.id}
+                          type="button"
+                          disabled={disabled}
+                          onClick={() => pickVariant(v)}
+                          title={disabled ? "Agotado" : v.label}
+                          className={`group flex items-center gap-2 border px-2.5 py-2 text-[12.5px] font-semibold tracking-[-0.01em] transition-colors duration-200 ${
+                            disabled
+                              ? "cursor-not-allowed border-ink/8 bg-bone-200 text-smoke"
+                              : isSelected
+                                ? "border-gold-500 bg-gold-500 text-ink"
+                                : "border-ink/15 bg-bone text-ink hover:border-ink"
+                          }`}
+                        >
+                          <span className="h-7 w-7 shrink-0 overflow-hidden bg-bone-300 border border-ink/10">
+                            {v.image ? (
+                              <img
+                                src={v.image}
+                                alt=""
+                                className="h-full w-full object-cover"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <span className="grid h-full w-full place-items-center text-[10px] text-smoke">
+                                —
+                              </span>
+                            )}
+                          </span>
+                          <span className="font-bold">{v.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="mb-2.5 text-[10.5px] font-bold uppercase tracking-[0.2em] text-smoke">
+                    Talle
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {product.sizes.map((s) => {
+                      const isSelected = selectedSize === s;
+                      const disabled = product.inStock === false;
+                      return (
+                        <button
+                          key={s}
+                          type="button"
+                          disabled={disabled}
+                          onClick={() => pickSize(s)}
+                          className={`min-w-[52px] border px-3 py-2.5 text-[13px] font-semibold tracking-[-0.01em] transition-colors duration-200 ${
+                            disabled
+                              ? "cursor-not-allowed border-ink/8 bg-bone-200 text-smoke"
+                              : isSelected
+                              ? "border-gold-500 bg-gold-500 text-ink"
+                              : "border-ink/15 bg-bone text-ink hover:border-ink"
+                          }`}
+                        >
+                          {s}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
 
               <div className="mt-4 flex gap-2">
                 <button
@@ -292,7 +379,9 @@ export function ProductDetail() {
                       : "cursor-not-allowed bg-ink/15 text-smoke"
                   }`}
                 >
-                  Agregar al carrito
+                  {selectedVariant
+                    ? `Agregar al carrito · ${selectedVariant.label}`
+                    : "Agregar al carrito"}
                 </button>
                 <button
                   type="button"

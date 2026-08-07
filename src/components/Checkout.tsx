@@ -22,24 +22,41 @@ const EMPTY_FORM: FormState = {
 
 const PHONE_REGEX = /^[+()\d\s-]{8,20}$/;
 
-function buildLineInputs(lines: ReturnType<typeof useStore>["lines"]) {
-  // group lines by productId to consolidate sizes when same product has
-  // multiple size variants in cart
+function buildLineInputs(
+  lines: ReturnType<typeof useStore>["lines"],
+) {
+  // Group lines by (productId, variant or size) so each variant becomes its
+  // own order_item with its own qty. We pass through the variant object
+  // (id, label, image) so the snapshot persists in order_items.
   const groups = new Map<
     string,
-    { productId: string; quantity: number; unitType: string }
+    {
+      productId: string;
+      quantity: number;
+      unitType: string;
+      variant?: { id: string; label: string; image?: string };
+    }
   >();
   for (const l of lines) {
     const productId = l.product.id;
-    const key = `${productId}::${l.size}`;
-    const existing = groups.get(key);
+    const groupKey = l.variant
+      ? `${productId}::v:${l.variant.id}`
+      : `${productId}::s:${l.size}`;
+    const existing = groups.get(groupKey);
     if (existing) {
       existing.quantity += l.qty;
     } else {
-      groups.set(key, {
+      groups.set(groupKey, {
         productId,
         quantity: l.qty,
-        unitType: `talle ${l.size}`,
+        unitType: l.variant ? l.variant.label : `talle ${l.size}`,
+        variant: l.variant
+          ? {
+              id: l.variant.id,
+              label: l.variant.label,
+              image: l.variant.image || undefined,
+            }
+          : undefined,
       });
     }
   }
@@ -289,7 +306,9 @@ export function Checkout({ onExit }: { onExit: () => void }) {
                             {l.product.name}
                           </h3>
                           <p className="mt-0.5 text-[12px] text-smoke">
-                            Talle {l.size}
+                            {l.variant
+                              ? l.variant.label
+                              : `Talle ${l.size}`}
                           </p>
                           <div className="mt-2 flex items-center justify-between">
                             <div className="flex items-center border border-ink/12">

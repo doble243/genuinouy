@@ -29,6 +29,11 @@ export type CartLineInput = {
   productId: string;
   quantity: number;
   unitType?: string;
+  variant?: {
+    id: string;
+    label: string;
+    image?: string;
+  };
 };
 
 export type SubmitOrderInput = {
@@ -109,6 +114,9 @@ export async function submitOrder(
     unitPrice: number;
     subtotal: number;
     unitType: string;
+    productVariantId: string | null;
+    variantLabel: string | null;
+    variantImage: string | null;
   };
 
   const validated: ValidatedLine[] = [];
@@ -146,6 +154,9 @@ export async function submitOrder(
       unitPrice,
       subtotal,
       unitType: line.unitType || "unidad",
+      productVariantId: line.variant?.id ?? null,
+      variantLabel: line.variant?.label ?? null,
+      variantImage: line.variant?.image ?? null,
     });
     total = round2(total + subtotal);
   }
@@ -189,6 +200,10 @@ export async function submitOrder(
     unit_price: v.unitPrice,
     subtotal: v.subtotal,
     unit_type: v.unitType,
+    // Variant snapshot — all null when order has no variants
+    product_variant_id: v.productVariantId,
+    variant_label: v.variantLabel,
+    variant_image: v.variantImage,
   }));
 
   const { error: itemsErr } = await supabase
@@ -265,6 +280,9 @@ export type AdminOrderItem = {
   unit_price: number;
   subtotal: number;
   unit_type: string | null;
+  product_variant_id: string | null;
+  variant_label: string | null;
+  variant_image: string | null;
   created_at: string;
 };
 
@@ -274,7 +292,7 @@ export async function listAdminOrderItems(
   const { data, error } = await supabase
     .from("order_items")
     .select(
-      "id,product_id,product_name,quantity,unit_price,subtotal,unit_type,created_at",
+      "id,product_id,product_name,quantity,unit_price,subtotal,unit_type,product_variant_id,variant_label,variant_image,created_at",
     )
     .eq("order_id", orderId)
     .order("created_at", { ascending: true });
