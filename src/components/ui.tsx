@@ -1,4 +1,4 @@
-import type { ReactNode, SVGProps } from "react";
+import { useEffect, type ReactNode, type SVGProps } from "react";
 import { useReveal } from "../lib/store";
 import { LOGO } from "../lib/data";
 
@@ -162,3 +162,74 @@ export const Grid = (p: I) => (
     <rect x="13" y="13" width="7" height="7" />
   </svg>
 );
+
+/* ---------- ImageLightbox ----------
+ * Reusable full-screen viewer. Set `src` to open, set null to close.
+ * Click the backdrop, the X button, or press Escape to close.
+ * Used by both the admin orders detail and the customer /cuenta view.
+ */
+export function ImageLightbox({
+  src,
+  onClose,
+  alt = "",
+  caption,
+}: {
+  src: string | null;
+  onClose: () => void;
+  alt?: string;
+  caption?: string;
+}) {
+  useEffect(() => {
+    if (!src) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    // Lock body scroll while lightbox is open
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [src, onClose]);
+
+  if (!src) return null;
+
+  return (
+    <div
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Vista ampliada de imagen"
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-obsidian/90 p-4 backdrop-blur-sm animate-fade-in cursor-zoom-out"
+    >
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+        aria-label="Cerrar"
+        className="absolute top-4 right-4 grid h-12 w-12 place-items-center rounded-full bg-ink text-bone transition-colors hover:bg-gold-500 hover:text-ink"
+      >
+        <Close className="h-6 w-6" />
+      </button>
+      <img
+        src={src}
+        alt={alt}
+        onClick={(e) => e.stopPropagation()}
+        loading="eager"
+        className="max-h-[88vh] max-w-[92vw] bg-bone object-contain shadow-2xl cursor-default"
+      />
+      {caption && (
+        <p className="absolute bottom-5 left-1/2 max-w-[80vw] -translate-x-1/2 truncate text-center text-[11.5px] font-semibold uppercase tracking-[0.18em] text-bone">
+          {caption}
+        </p>
+      )}
+      <p className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] uppercase tracking-[0.2em] text-bone/60">
+        Click afuera o ESC para cerrar
+      </p>
+    </div>
+  );
+}

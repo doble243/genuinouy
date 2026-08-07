@@ -12,8 +12,8 @@ import { currentCustomer } from "../lib/customerSession";
 import { uy } from "../lib/data";
 import type { AdminOrderRow } from "../lib/orders";
 import { useStore } from "../lib/store";
-import { customerWhatsappUrl } from "../lib/whatsapp";
-import { Arrow, Close } from "./ui";
+import { customerWhatsappUrl, variantThumb } from "../lib/whatsapp";
+import { Arrow, Close, ImageLightbox } from "./ui";
 
 const STATUS_LABELS: Record<string, { label: string; tone: string }> = {
   pending: { label: "Nuevo", tone: "bg-amber-100 text-amber-800" },
@@ -61,6 +61,10 @@ export function Account({ onExit }: { onExit: () => void }) {
     Record<string, AdminOrderItem[]>
   >({});
   const [loadingItems, setLoadingItems] = useState<string | null>(null);
+  const [lightboxSrc, setLightboxSrc] = useState<{
+    url: string;
+    label?: string;
+  } | null>(null);
 
   const productById = useMemo(() => {
     const map = new Map<string, (typeof storeProducts)[number]>();
@@ -286,25 +290,43 @@ export function Account({ onExit }: { onExit: () => void }) {
                           <ul className="divide-y divide-ink/8 border border-ink/8">
                             {items.map((it) => {
                               const product = productById.get(it.product_id);
-                              const image =
+                              const fallbackImg =
                                 product?.image ||
-                                (Array.isArray(product?.images) && product.images[0]) ||
-                                "";
+                                (Array.isArray(product?.images)
+                                  ? product.images[0]
+                                  : "");
+                              const image = variantThumb(it, fallbackImg);
                               return (
                                 <li
                                   key={it.id}
                                   className="flex items-center gap-3 px-3 py-2"
                                 >
-                                  <div className="h-14 w-12 shrink-0 bg-bone-200">
-                                    {image && (
+                                  {image ? (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setLightboxSrc({
+                                          url: image,
+                                          label:
+                                            (it.product_name || "") +
+                                            (it.variant_label
+                                              ? ` — ${it.variant_label}`
+                                              : ""),
+                                        })
+                                      }
+                                      title="Click para ampliar"
+                                      className="h-14 w-12 shrink-0 overflow-hidden border border-ink/10 bg-bone-200 cursor-zoom-in transition-transform hover:scale-[1.05] hover:border-gold-500/60"
+                                    >
                                       <img
                                         src={image}
                                         alt=""
                                         className="h-full w-full object-cover"
                                         loading="lazy"
                                       />
-                                    )}
-                                  </div>
+                                    </button>
+                                  ) : (
+                                    <div className="h-14 w-12 shrink-0 border border-ink/10 bg-bone-200" />
+                                  )}
                                   <div className="min-w-0 flex-1">
                                     <p className="truncate text-[13px] font-semibold">
                                       {it.product_name || "(producto)"}
@@ -394,6 +416,13 @@ export function Account({ onExit }: { onExit: () => void }) {
           </a>
         </section>
       </main>
+
+      <ImageLightbox
+        src={lightboxSrc?.url ?? null}
+        alt={lightboxSrc?.label}
+        caption={lightboxSrc?.label}
+        onClose={() => setLightboxSrc(null)}
+      />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { supabase } from "../../lib/supabase";
 import { uy } from "../../lib/data";
 import { useStore } from "../../lib/store";
 import { adminWhatsappUrl, variantThumb } from "../../lib/whatsapp";
+import { ImageLightbox } from "../ui";
 
 const STATUS_LABELS: Record<string, { label: string; tone: string }> = {
   pending: { label: "Nuevo", tone: "bg-amber-100 text-amber-800" },
@@ -50,6 +51,10 @@ export function AdminOrdersList() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [items, setItems] = useState<Record<string, AdminOrderItem[]>>({});
   const [error, setError] = useState<string | null>(null);
+  const [lightboxSrc, setLightboxSrc] = useState<{
+    url: string;
+    alt: string;
+  } | null>(null);
 
   // In-memory product cache so we can show a fallback thumbnail when an
   // item was placed before variants existed or its variant has no photo.
@@ -338,14 +343,27 @@ export function AdminOrdersList() {
                             >
                               <div className="flex min-w-0 flex-1 items-start gap-3">
                                 {thumbUrl ? (
-                                  <span className="relative mt-0.5 inline-block h-12 w-12 shrink-0 overflow-hidden border border-ink/10 bg-bone-200 align-middle">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setLightboxSrc({
+                                        url: thumbUrl,
+                                        alt:
+                                          it.product_name ||
+                                          it.variant_label ||
+                                          "producto",
+                                      })
+                                    }
+                                    title="Click para ampliar"
+                                    className="relative mt-0.5 inline-block h-12 w-12 shrink-0 overflow-hidden border border-ink/10 bg-bone-200 align-middle cursor-zoom-in transition-transform hover:scale-[1.05] hover:border-gold-500/60"
+                                  >
                                     <img
                                       src={thumbUrl}
                                       alt=""
                                       className="h-full w-full object-cover"
                                       loading="lazy"
                                     />
-                                  </span>
+                                  </button>
                                 ) : (
                                   <span className="mt-0.5 inline-block h-12 w-12 shrink-0 border border-ink/10 bg-bone-200" />
                                 )}
@@ -368,7 +386,7 @@ export function AdminOrdersList() {
                               <span className="text-[13px] font-bold">
                                 {uy(Number(it.subtotal) || 0)}
                               </span>
-                            </li>
+                             </li>
                           );
                         })}
                       </ul>
@@ -380,6 +398,12 @@ export function AdminOrdersList() {
           );
         })}
       </ul>
+
+      <ImageLightbox
+        src={lightboxSrc?.url ?? null}
+        alt={lightboxSrc?.alt}
+        onClose={() => setLightboxSrc(null)}
+      />
     </section>
   );
 }
