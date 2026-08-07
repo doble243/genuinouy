@@ -30,12 +30,39 @@ const STATUS_LINES: Record<string, string> = {
     "tuvo un cambio. Escribinos para que veamos opciones y ayudarte a encontrar algo que te encaje.",
 };
 
-function digits(phone: string | null | undefined): string {
-  return (phone || "").replace(/\D/g, "");
+/**
+ * Normalize a Uruguayan phone number to the digits-only E.164-ish format
+ * WhatsApp expects in `wa.me/<digits>` URLs.
+ *
+ * Uruguay mobile convention is to write the leading 0 when dialing locally
+ * (e.g. `091 234 567`), but the international form — what WhatsApp matches
+ * against — is `+598 9XX XXX XXX` (no leading 0, country code 598 first).
+ *
+ * Behavior:
+ *   ""                          → ""
+ *   "091234567"                 → "59891234567"   (strip leading 0, add 598)
+ *   "0 9 1234 5678"             → "598912345678"  (spaces stripped, 0 dropped)
+ *   "59899123456"               → "59899123456"   (already has prefix, kept)
+ *   "+598 99 123 456"           → "59899123456"   (clean formatting)
+ *   "991234567"                 → "598991234567"  (no prefix → prepend 598)
+ *
+ * Detection rule: if the digit string starts with "598" and is at least 11
+ * digits long (mobile = 12, landline = 11), it's already in international
+ * format and we keep it as-is. Otherwise we drop leading zeros and prepend
+ * "598".
+ */
+export function normalizeUruguayPhone(
+  raw: string | null | undefined,
+): string {
+  const d = (raw || "").replace(/\D/g, "");
+  if (!d) return "";
+  if (d.startsWith("598") && d.length >= 11) return d;
+  const stripped = d.replace(/^0+/, "");
+  return "598" + stripped;
 }
 
 function waUrl(phone: string | null | undefined, text: string): string | null {
-  const p = digits(phone);
+  const p = normalizeUruguayPhone(phone);
   if (!p) return null;
   return `https://wa.me/${p}?text=${encodeURIComponent(text)}`;
 }
