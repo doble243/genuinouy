@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import type { AdminProduct } from "../../types/admin";
 import { brands as brandOptions } from "../../lib/data";
+import type { ProductVariant } from "../../lib/data";
 import { cdnUrl, uploadImageToCloudinary } from "../../lib/cloudinary";
 
 const FALLBACK_IMG = cdnUrl("genuinos/assets/cat_shoes", "f_auto,q_auto");
@@ -24,6 +25,21 @@ const CATEGORY_OPTIONS = [
   "Accesorios",
 ];
 const GENDER_OPTIONS = ["Unisex", "Hombre", "Mujer", "Niños"];
+const VARIANT_TYPES: Array<{ value: ProductVariant["type"]; label: string }> = [
+  { value: "size", label: "Talle" },
+  { value: "color", label: "Color" },
+  { value: "other", label: "Otro" },
+];
+
+function newVariantId(): string {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof (crypto as any).randomUUID === "function"
+  ) {
+    return (crypto as any).randomUUID();
+  }
+  return `var-${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
+}
 
 export function AdminProductFormModal({
   isOpen,
@@ -47,6 +63,12 @@ export function AdminProductFormModal({
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Variants state
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [variantDraft, setVariantDraft] = useState<ProductVariant | null>(null);
+  const [variantImagePicker, setVariantImagePicker] = useState<"gallery" | "upload">("gallery");
+  const variantFileInputRef = useRef<HTMLInputElement>(null);
+
   const isEditing = Boolean(initialProduct);
 
   // Initialize form when opened or initialProduct changes
@@ -62,12 +84,17 @@ export function AdminProductFormModal({
       setStockQty(initialProduct.stock ?? 10);
       setInStock(initialProduct.inStock !== false);
       setSelectedSizes(initialProduct.sizes || ["39", "40", "41", "42"]);
-      
+
       const imgList = initialProduct.images || [initialProduct.image];
       if (initialProduct.hover && !imgList.includes(initialProduct.hover)) {
         imgList.push(initialProduct.hover);
       }
       setImages(imgList.filter(Boolean));
+
+      setVariants(
+        Array.isArray(initialProduct.variants) ? initialProduct.variants : [],
+      );
+      setVariantDraft(null);
     } else {
       // Default reset for new product
       setName("");
@@ -82,6 +109,8 @@ export function AdminProductFormModal({
       setInStock(true);
       setSelectedSizes(["39", "40", "41", "42"]);
       setImages([]);
+      setVariants([]);
+      setVariantDraft(null);
     }
   }, [initialProduct, isOpen]);
 
@@ -162,6 +191,7 @@ export function AdminProductFormModal({
       image: primaryImg,
       hover: hoverImg,
       images,
+      variants,
     };
 
     onSave(productPayload);
@@ -500,6 +530,389 @@ export function AdminProductFormModal({
                 {uploading ? "Subiendo a Cloudinary…" : "⬆ Subir imagen (se guarda en webp)"}
               </button>
             </div>
+          </div>
+
+          {/* Section 6: Variantes (size/color/other con foto) */}
+          <div className="space-y-4 pt-2">
+            <div className="flex items-center justify-between border-b border-bone-300 pb-1">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-gold-600">
+                6. Variantes
+              </h3>
+              <span className="text-[10px] text-smoke">
+                {variants.length} cargada{variants.length === 1 ? "" : "s"}
+              </span>
+            </div>
+
+            {variants.length === 0 && !variantDraft && (
+              <div className="border border-dashed border-bone-300 px-4 py-6 text-center text-[12px] text-smoke">
+                Sin variantes todavía. Talles, colores u otras combinaciones con su propia
+                foto (útil para colorways). Si el producto tiene una sola presentación,
+                podés no usar variantes y seguir trabajando con la galería.
+              </div>
+            )}
+
+            {variants.length > 0 && (
+              <ul className="space-y-2">
+                {variants.map((v) => (
+                  <li
+                    key={v.id}
+                    className="flex items-center gap-3 border border-bone-300 bg-bone-200/40 p-3"
+                  >
+                    <div className="h-14 w-14 shrink-0 bg-bone-300 overflow-hidden rounded-lg border border-bone-300">
+                      {v.image ? (
+                        <img
+                          src={v.image}
+                          alt=""
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="grid h-full w-full place-items-center text-[10px] text-smoke">
+                          sin foto
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center bg-ink text-bone px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.16em]">
+                          {v.type === "size"
+                            ? "Talle"
+                            : v.type === "color"
+                              ? "Color"
+                              : "Otro"}
+                        </span>
+                        <span className="truncate text-[13px] font-bold">{v.label}</span>
+                      </div>
+                      <p className="mt-0.5 truncate text-[11px] text-smoke">
+                        valor: <span className="font-mono">{v.value}</span>
+                        {v.sku ? <> · SKU: <span className="font-mono">{v.sku}</span></> : null}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-[11px] font-bold text-smoke">
+                        stock {v.stock ?? 0}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setVariants((prev) =>
+                            prev.map((x) =>
+                              x.id === v.id
+                                ? { ...x, in_stock: !(x.in_stock ?? true) }
+                                : x,
+                            ),
+                          );
+                        }}
+                        title={v.in_stock === false ? "Reactivar" : "Marcar agotado"}
+                        className={`w-10 h-5 flex items-center rounded-full p-0.5 transition-colors ${
+                          (v.in_stock ?? true)
+                            ? "bg-emerald-500"
+                            : "bg-bone-300"
+                        }`}
+                      >
+                        <span
+                          className={`block h-4 w-4 rounded-full bg-white shadow-md transform transition-transform ${
+                            (v.in_stock ?? true) ? "translate-x-5" : "translate-x-0"
+                          }`}
+                        />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setVariants((prev) => prev.filter((x) => x.id !== v.id))
+                        }
+                        aria-label="Quitar variante"
+                        className="bg-rose-600 text-white px-2 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] hover:bg-rose-700"
+                      >
+                        Quitar
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {/* Inline variant editor */}
+            {variantDraft ? (
+              <div className="border border-gold-500/40 bg-gold-50/40 p-3 space-y-3 rounded-xl">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-smoke mb-1">
+                      Tipo
+                    </label>
+                    <select
+                      value={variantDraft.type}
+                      onChange={(e) =>
+                        setVariantDraft({
+                          ...variantDraft,
+                          type: e.target.value as ProductVariant["type"],
+                        })
+                      }
+                      className="w-full border border-bone-300 rounded-lg px-2.5 py-2 text-[12px] font-semibold bg-white"
+                    >
+                      {VARIANT_TYPES.map((t) => (
+                        <option key={t.value} value={t.value}>
+                          {t.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-smoke mb-1">
+                      Valor
+                    </label>
+                    <input
+                      type="text"
+                      value={variantDraft.value}
+                      onChange={(e) =>
+                        setVariantDraft({ ...variantDraft, value: e.target.value })
+                      }
+                      placeholder={variantDraft.type === "size" ? "42" : "Negro"}
+                      className="w-full border border-bone-300 rounded-lg px-2.5 py-2 text-[12px] font-mono font-bold bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-smoke mb-1">
+                      Etiqueta
+                    </label>
+                    <input
+                      type="text"
+                      value={variantDraft.label}
+                      onChange={(e) =>
+                        setVariantDraft({ ...variantDraft, label: e.target.value })
+                      }
+                      placeholder={variantDraft.type === "size" ? "Talle 42" : "Negro mate"}
+                      className="w-full border border-bone-300 rounded-lg px-2.5 py-2 text-[12px] font-bold bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-smoke mb-1">
+                      SKU (opcional)
+                    </label>
+                    <input
+                      type="text"
+                      value={variantDraft.sku || ""}
+                      onChange={(e) =>
+                        setVariantDraft({ ...variantDraft, sku: e.target.value })
+                      }
+                      placeholder="GEN-COL-001"
+                      className="w-full border border-bone-300 rounded-lg px-2.5 py-2 text-[12px] font-mono bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-smoke mb-1">
+                      Stock
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={variantDraft.stock ?? 0}
+                      onChange={(e) =>
+                        setVariantDraft({
+                          ...variantDraft,
+                          stock: Math.max(0, parseInt(e.target.value) || 0),
+                          in_stock:
+                            (parseInt(e.target.value) || 0) > 0
+                              ? variantDraft.in_stock ?? true
+                              : false,
+                        })
+                      }
+                      className="w-full border border-bone-300 rounded-lg px-2.5 py-2 text-[12px] font-bold bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Image picker for the variant */}
+                <div>
+                  <div className="mb-1.5 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setVariantImagePicker("gallery")}
+                      className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] ${
+                        variantImagePicker === "gallery"
+                          ? "bg-obsidian text-bone"
+                          : "bg-bone-200 text-ink hover:bg-bone-300"
+                      }`}
+                    >
+                      De la galería
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setVariantImagePicker("upload")}
+                      className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] ${
+                        variantImagePicker === "upload"
+                          ? "bg-obsidian text-bone"
+                          : "bg-bone-200 text-ink hover:bg-bone-300"
+                      }`}
+                    >
+                      Subir nueva
+                    </button>
+                    {variantDraft.image && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setVariantDraft({ ...variantDraft, image: null })
+                        }
+                        className="ml-auto text-[10px] font-bold text-rose-600 hover:underline"
+                      >
+                        Quitar imagen
+                      </button>
+                    )}
+                  </div>
+
+                  {variantDraft.image && (
+                    <div className="mb-2 flex items-center gap-2 rounded-lg border border-bone-300 bg-white p-2">
+                      <img
+                        src={variantDraft.image}
+                        alt=""
+                        className="h-12 w-12 rounded-md object-cover border border-bone-300"
+                        loading="lazy"
+                      />
+                      <span className="truncate text-[11px] text-smoke">
+                        {variantDraft.image}
+                      </span>
+                    </div>
+                  )}
+
+                  {variantImagePicker === "gallery" ? (
+                    images.length > 0 ? (
+                      <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                        {images.map((imgUrl, idx) => {
+                          const selected = variantDraft.image === imgUrl;
+                          return (
+                            <button
+                              key={`${imgUrl}-${idx}`}
+                              type="button"
+                              onClick={() =>
+                                setVariantDraft({ ...variantDraft, image: imgUrl })
+                              }
+                              className={`relative aspect-square overflow-hidden rounded-lg border-2 transition-all ${
+                                selected
+                                  ? "border-gold-500 ring-2 ring-gold-500/40"
+                                  : "border-bone-300 hover:border-ink/40"
+                              }`}
+                              title="Usar como foto de variante"
+                            >
+                              <img
+                                src={imgUrl}
+                                alt=""
+                                className="h-full w-full object-cover"
+                                loading="lazy"
+                              />
+                              {selected && (
+                                <span className="absolute inset-0 grid place-items-center bg-gold-500/30 text-[18px] text-obsidian font-black">
+                                  ✓
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="border border-dashed border-bone-300 px-3 py-3 text-center text-[11px] text-smoke">
+                        Subí primero imágenes en la sección 5 (galería) y volvé acá.
+                      </div>
+                    )
+                  ) : (
+                    <div>
+                      <input
+                        ref={variantFileInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp,image/avif"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          try {
+                            const url = await uploadImageToCloudinary(file);
+                            setVariantDraft({ ...variantDraft, image: url });
+                            // also add to the gallery so the user can reuse it
+                            setImages((prev) =>
+                              prev.includes(url) ? prev : [url, ...prev],
+                            );
+                          } catch (err) {
+                            console.error("Variant image upload failed:", err);
+                            alert("No se pudo subir la imagen a Cloudinary.");
+                          } finally {
+                            if (variantFileInputRef.current)
+                              variantFileInputRef.current.value = "";
+                          }
+                        }}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => variantFileInputRef.current?.click()}
+                        className="w-full border border-dashed border-gold-500/50 rounded-lg px-3 py-2 text-[11px] font-bold text-gold-600 hover:bg-gold-500/5"
+                      >
+                        ⬆ Subir foto de la variante (webp automático)
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVariantDraft(null);
+                      setVariantImagePicker("gallery");
+                    }}
+                    className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-smoke hover:text-ink"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!variantDraft.value.trim() || !variantDraft.label.trim()) {
+                        alert("Ingresá al menos Valor y Etiqueta para la variante.");
+                        return;
+                      }
+                      const normalized: ProductVariant = {
+                        ...variantDraft,
+                        id: variantDraft.id || newVariantId(),
+                        value: variantDraft.value.trim(),
+                        label: variantDraft.label.trim(),
+                      };
+                      setVariants((prev) => [...prev, normalized]);
+                      setVariantDraft(null);
+                      setVariantImagePicker("gallery");
+                    }}
+                    className="bg-gold-500 hover:bg-gold-400 text-obsidian text-[10px] font-bold uppercase tracking-[0.14em] px-4 py-2 rounded-lg"
+                  >
+                    + Agregar variante
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() =>
+                  setVariantDraft({
+                    id: newVariantId(),
+                    type: "size",
+                    value: "",
+                    label: "",
+                    image: null,
+                    sku: "",
+                    stock: 1,
+                    in_stock: true,
+                  })
+                }
+                className="w-full border border-dashed border-gold-500/50 rounded-xl px-3 py-2.5 text-xs font-bold text-gold-600 hover:bg-gold-500/5 transition-all min-h-[44px]"
+              >
+                + Agregar variante
+              </button>
+            )}
+
+            <p className="text-[10.5px] text-smoke leading-relaxed">
+              Las variantes conviven con los talles generales. La foto de la variante
+              es lo que ve el cliente cuando selecciona esa opción (útil para colorways
+              con su propia foto).
+            </p>
           </div>
         </form>
 

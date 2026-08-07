@@ -1,4 +1,4 @@
-import type { Product } from "../lib/data";
+import type { Product, ProductVariant } from "../lib/data";
 
 export type AdminProduct = Product & {
   sku?: string;
@@ -8,6 +8,7 @@ export type AdminProduct = Product & {
   images?: string[];
   inStock?: boolean;
   createdAt?: string;
+  variants?: ProductVariant[];
 };
 
 export type HeroSlide = {

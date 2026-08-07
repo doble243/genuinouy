@@ -82,6 +82,7 @@ export function AdminPanel({ onExitAdmin }: { onExitAdmin?: () => void }) {
         sizes: productData.sizes ? productData.sizes.map(Number).filter((n) => !isNaN(n)) : undefined,
         images: productData.images,
         featured: productData.featured,
+        variants: productData.variants,
       });
     } else {
       await createProduct({
@@ -98,6 +99,7 @@ export function AdminPanel({ onExitAdmin }: { onExitAdmin?: () => void }) {
         sizes: productData.sizes ? productData.sizes.map(Number).filter((n) => !isNaN(n)) : [38, 39, 40, 41, 42],
         images: productData.images && productData.images.length > 0 ? productData.images : [productData.image || ""],
         featured: Boolean(productData.featured),
+        variants: productData.variants ?? [],
       });
     }
     setIsModalOpen(false);

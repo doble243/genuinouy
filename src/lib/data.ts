@@ -2,6 +2,17 @@ import { cdnUrl } from "./cloudinary";
 
 export const LOGO = "https://genuinos.simplemente.com.uy/logo_genuinos.webp";
 
+export type ProductVariant = {
+  id: string;
+  type: "size" | "color" | "other";
+  value: string;
+  label: string;
+  image?: string | null;
+  sku?: string | null;
+  stock?: number;
+  in_stock?: boolean;
+};
+
 export type Product = {
   id: string;
   brand: string;
@@ -20,6 +31,7 @@ export type Product = {
   availableQuantity?: number;
   images?: string[];
   featured?: boolean;
+  variants?: ProductVariant[];
 };
 
 const px = (id: number, w = 900) =>

@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import type { Product } from "./data";
+import type { Product, ProductVariant } from "./data";
 import { cdnUrl, resolveImageUrl } from "./cloudinary";
 
 /** Imagen de respaldo en Cloudinary (webp) cuando no hay foto cargada. */
@@ -19,6 +19,7 @@ export type DbProductRow = {
   sizes?: (number | string)[] | null;
   images?: string[] | null;
   featured?: boolean | null;
+  variants?: ProductVariant[] | null;
   created_at?: string | null;
 };
 
@@ -36,6 +37,7 @@ export type CreateProductInput = {
   sizes?: (string | number)[];
   images?: string[];
   featured?: boolean;
+  variants?: ProductVariant[];
 };
 
 export type UpdateProductInput = Partial<CreateProductInput>;
@@ -75,6 +77,9 @@ export function mapDbToProduct(item: DbProductRow | any): Product {
         : 1,
     images: images.length > 0 ? images : [mainImage],
     featured: Boolean(item.featured),
+    variants: Array.isArray(item.variants)
+      ? (item.variants as ProductVariant[])
+      : [],
   };
 }
 
@@ -120,6 +125,7 @@ export async function createProduct(input: CreateProductInput): Promise<Product>
         ? input.images.map(resolveImageUrl)
         : [FALLBACK_IMG, FALLBACK_IMG],
     featured: Boolean(input.featured),
+    variants: input.variants ?? [],
   };
 
   const { data, error } = await supabase
@@ -163,6 +169,7 @@ export async function updateProduct(
   }
   if (input.images !== undefined) dbPayload.images = input.images.map(resolveImageUrl);
   if (input.featured !== undefined) dbPayload.featured = input.featured;
+  if (input.variants !== undefined) dbPayload.variants = input.variants;
 
   const { data, error } = await supabase
     .from("products")
