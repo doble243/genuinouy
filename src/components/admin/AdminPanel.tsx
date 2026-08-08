@@ -8,6 +8,7 @@ import { AdminOrdersList } from "./AdminOrdersList";
 import { AdminCustomersList } from "./AdminCustomersList";
 import type { AdminProduct, AdminTab } from "../../types/admin";
 import { useStore } from "../../lib/store";
+import { mapProductToAdminProduct } from "../../lib/adminProductMapper";
 
 export function AdminPanel({ onExitAdmin }: { onExitAdmin?: () => void }) {
   const {
@@ -23,26 +24,12 @@ export function AdminPanel({ onExitAdmin }: { onExitAdmin?: () => void }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<AdminProduct | null>(null);
 
-  // Map store products from Supabase to AdminProduct format
-  const products: AdminProduct[] = storeProducts.map((p, index) => ({
-    id: p.id,
-    brand: p.brand,
-    name: p.name,
-    price: p.price,
-    compareAt: p.compareAt,
-    image: p.image,
-    hover: p.hover || p.image,
-    isNew: p.isNew,
-    sizes: p.sizes,
-    sku: p.sku || `GEN-${p.brand.slice(0, 2).toUpperCase()}-${100 + index}`,
-    stock: p.availableQuantity !== undefined ? p.availableQuantity : (p.inStock !== false ? 5 : 0),
-    inStock: p.inStock !== false,
-    category: p.category || "Calzado",
-    gender: p.gender || "Unisex",
-    description: p.description,
-    images: p.images && p.images.length > 0 ? p.images : [p.image, p.hover || p.image],
-    featured: p.featured,
-  }));
+  // Map store products from Supabase to AdminProduct format. Using a pure
+  // mapper so the variants array is preserved on edit (previously this
+  // mapping dropped `variants` and saving an existing product wiped them).
+  const products: AdminProduct[] = storeProducts.map((p, index) =>
+    mapProductToAdminProduct(p, index),
+  );
 
   const handleOpenNewModal = () => {
     setEditingProduct(null);

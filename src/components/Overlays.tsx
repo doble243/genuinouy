@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { uy } from "../lib/data";
 import { useStore } from "../lib/store";
+import { openProductFromOverlay } from "../lib/overlayActions";
 import { Arrow, Close, Heart, LogoWatermark, Minus, Plus, Search } from "./ui";
 import { currentCustomer } from "../lib/customerSession";
 import {
@@ -23,6 +24,7 @@ export function CartDrawer() {
     total,
     count,
     notify,
+    setSelectedProduct,
   } = useStore();
   const free = total >= 4500;
   const [savedCarts, setSavedCarts] = useState<SavedCart[]>([]);
@@ -236,62 +238,85 @@ export function CartDrawer() {
               </div>
             )}
             <div className="flex-1 overflow-y-auto px-5">
-              {lines.map((l) => (
-                <div
-                  key={l.key}
-                  className="flex gap-4 border-b border-ink/8 py-4"
-                >
-                  <img
-                    src={l.variant?.image || l.product.image}
-                    alt=""
-                    className="h-24 w-20 shrink-0 bg-bone-200 object-cover"
-                    loading="lazy"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-smoke">
-                      {l.product.brand}
-                    </p>
-                    <h3 className="mt-0.5 truncate text-[14px] font-semibold">
-                      {l.product.name}
-                    </h3>
-                    <p className="mt-0.5 text-[12px] text-smoke">
-                      {l.variant
-                        ? l.variant.label
-                        : `Talle ${l.size}`}
-                    </p>
-                    <div className="mt-2.5 flex items-center justify-between">
-                      <div className="flex items-center border border-ink/12">
-                        <button
-                          aria-label="Restar"
-                          onClick={() => setQty(l.key, l.qty - 1)}
-                          className="grid h-8 w-8 place-items-center text-ink/70 hover:text-ink"
-                        >
-                          <Minus className="h-3.5 w-3.5" />
-                        </button>
-                        <span className="w-6 text-center text-[13px] font-semibold">
-                          {l.qty}
-                        </span>
-                        <button
-                          aria-label="Sumar"
-                          onClick={() => setQty(l.key, l.qty + 1)}
-                          className="grid h-8 w-8 place-items-center text-ink/70 hover:text-ink"
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                      <span className="text-[14px] font-bold">
-                        {uy(l.product.price * l.qty)}
-                      </span>
-                    </div>
+              {lines.map((l) => {
+                const openProduct = () =>
+                  openProductFromOverlay(l.product, setCartOpen, setSelectedProduct);
+                const lineProductContext = l.variant
+                  ? `Variante ${l.variant.label}`
+                  : `Talle ${l.size}`;
+                const lineProductAriaLabel = `Ver detalle de ${l.product.brand} ${l.product.name}, ${lineProductContext}`;
+
+                return (
+                  <div
+                    key={l.key}
+                    className="flex gap-4 border-b border-ink/8 py-4"
+                  >
                     <button
-                      onClick={() => remove(l.key)}
-                      className="mt-2 text-[11px] text-smoke underline underline-offset-2 hover:text-ink"
+                      type="button"
+                      onClick={openProduct}
+                      className="shrink-0"
+                      aria-label={lineProductAriaLabel}
                     >
-                      Quitar
+                      <img
+                        src={l.variant?.image || l.product.image}
+                        alt=""
+                        className="h-24 w-20 bg-bone-200 object-cover"
+                        loading="lazy"
+                      />
                     </button>
+                    <div className="min-w-0 flex-1">
+                      <button
+                        type="button"
+                        onClick={openProduct}
+                        className="-mx-1 block w-[calc(100%+0.5rem)] px-1 py-0.5 text-left transition-colors hover:bg-bone-200"
+                        aria-label={lineProductAriaLabel}
+                      >
+                        <span className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-smoke">
+                          {l.product.brand}
+                        </span>
+                        <span className="mt-0.5 block truncate text-[14px] font-semibold">
+                          {l.product.name}
+                        </span>
+                        <span className="mt-0.5 block text-[12px] text-smoke">
+                          {l.variant
+                            ? l.variant.label
+                            : `Talle ${l.size}`}
+                        </span>
+                      </button>
+                      <div className="mt-2.5 flex items-center justify-between">
+                        <div className="flex items-center border border-ink/12">
+                          <button
+                            aria-label="Restar"
+                            onClick={() => setQty(l.key, l.qty - 1)}
+                            className="grid h-8 w-8 place-items-center text-ink/70 hover:text-ink"
+                          >
+                            <Minus className="h-3.5 w-3.5" />
+                          </button>
+                          <span className="w-6 text-center text-[13px] font-semibold">
+                            {l.qty}
+                          </span>
+                          <button
+                            aria-label="Sumar"
+                            onClick={() => setQty(l.key, l.qty + 1)}
+                            className="grid h-8 w-8 place-items-center text-ink/70 hover:text-ink"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        <span className="text-[14px] font-bold">
+                          {uy(l.product.price * l.qty)}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => remove(l.key)}
+                        className="mt-2 text-[11px] text-smoke underline underline-offset-2 hover:text-ink"
+                      >
+                        Quitar
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <footer className="shrink-0 border-t border-ink/8 px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-4">
@@ -482,7 +507,7 @@ export function WishDrawer() {
 const SUGGEST = ["Air Jordan 1", "New Balance 574", "Retro running", "Ofertas"];
 
 export function SearchOverlay() {
-  const { searchOpen, setSearchOpen, add, allProducts } = useStore();
+  const { searchOpen, setSearchOpen, setSelectedProduct, allProducts } = useStore();
   const [q, setQ] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -569,10 +594,10 @@ export function SearchOverlay() {
                 results.map((p) => (
                   <button
                     key={p.id}
-                    onClick={() => {
-                      add(p, p.sizes[Math.floor(p.sizes.length / 2)]);
-                      setSearchOpen(false);
-                    }}
+                    onClick={() =>
+                      openProductFromOverlay(p, setSearchOpen, setSelectedProduct)
+                    }
+                    aria-label={`Ver detalle de ${p.brand} ${p.name}`}
                     className="flex w-full items-center gap-4 border-b border-ink/6 py-3 text-left transition-colors hover:bg-bone-200"
                   >
                     <img

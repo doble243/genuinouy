@@ -260,6 +260,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         availableQuantity: input.available_quantity,
         images: input.images,
         featured: input.featured,
+        variants: input.variants ?? [],
       };
 
       setProducts((prev) => [tempProduct, ...prev]);
