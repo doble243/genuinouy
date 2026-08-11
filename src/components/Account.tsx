@@ -49,7 +49,7 @@ function waLink(phone: string | null | undefined, orderNumber: string) {
 }
 
 export function Account({ onExit }: { onExit: () => void }) {
-  const { products: storeProducts } = useStore();
+  const { products: storeProducts, add } = useStore();
   const [phone, setPhone] = useState("");
   const [orders, setOrders] = useState<AdminOrderRow[]>([]);
   const [saved, setSaved] = useState<SavedCart[]>([]);
@@ -350,13 +350,37 @@ export function Account({ onExit }: { onExit: () => void }) {
                                 </li>
                               );
                             })}
-                            <li className="flex items-center justify-between gap-3 bg-ink/[0.03] px-3 py-3 text-[13px]">
-                              <span className="font-bold uppercase tracking-[0.12em]">
-                                Total
-                              </span>
-                              <span className="text-[15px] font-extrabold">
-                                {uy(Number(o.total_amount) || 0)}
-                              </span>
+                            <li className="flex flex-wrap items-center justify-between gap-3 bg-ink/[0.03] px-3 py-3 text-[13px]">
+                              <div>
+                                <span className="font-bold uppercase tracking-[0.12em]">
+                                  Total: {uy(Number(o.total_amount) || 0)}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  let countAdded = 0;
+                                  for (const it of items) {
+                                    const p = productById.get(it.product_id);
+                                    if (p) {
+                                      const size = it.unit_type?.replace("talle ", "") || p.sizes[0] || "38";
+                                      useStore.getState ? null : null; // React context dispatch
+                                      countAdded++;
+                                    }
+                                  }
+                                  // Re-add to cart via useStore add
+                                  for (const it of items) {
+                                    const p = productById.get(it.product_id);
+                                    if (p) {
+                                      const size = it.unit_type?.replace("talle ", "") || p.sizes[0] || "38";
+                                      add(p, size);
+                                    }
+                                  }
+                                }}
+                                className="bg-ink px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-bone transition-colors hover:bg-obsidian"
+                              >
+                                Volver a pedir
+                              </button>
                             </li>
                           </ul>
                         )}

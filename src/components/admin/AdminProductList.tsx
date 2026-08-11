@@ -21,7 +21,7 @@ export function AdminProductList({
 }: AdminProductListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("all");
-  const [stockFilter, setStockFilter] = useState<"all" | "inStock" | "outOfStock">("all");
+  const [stockFilter, setStockFilter] = useState<"all" | "inStock" | "outOfStock" | "lowStock">("all");
   
   // Inline Price Editing State: productId -> price value string
   const [editingPriceId, setEditingPriceId] = useState<string | null>(null);
@@ -42,13 +42,18 @@ export function AdminProductList({
   // Filtered Products list
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
-      // Search term matching (Name, Brand, SKU)
+      // Search term matching (Name, Brand, main SKU, Variant SKUs and color names)
       const q = searchTerm.toLowerCase().trim();
       const matchesSearch =
         !q ||
         p.name.toLowerCase().includes(q) ||
         p.brand.toLowerCase().includes(q) ||
-        (p.sku && p.sku.toLowerCase().includes(q));
+        (p.sku && p.sku.toLowerCase().includes(q)) ||
+        p.variants?.some(
+          (v) =>
+            v.name.toLowerCase().includes(q) ||
+            (v.sku && v.sku.toLowerCase().includes(q))
+        );
 
       // Brand matching
       const matchesBrand =
@@ -56,10 +61,14 @@ export function AdminProductList({
 
       // Stock status matching
       const isAvailable = p.inStock !== false && (p.stock === undefined || p.stock > 0);
+      const isLowStock = (p.availableQuantity !== undefined && p.availableQuantity > 0 && p.availableQuantity <= 3) ||
+        p.variants?.some((v) => v.stock !== undefined && v.stock > 0 && v.stock <= 3);
+
       const matchesStock =
         stockFilter === "all" ||
         (stockFilter === "inStock" && isAvailable) ||
-        (stockFilter === "outOfStock" && !isAvailable);
+        (stockFilter === "outOfStock" && !isAvailable) ||
+        (stockFilter === "lowStock" && Boolean(isLowStock));
 
       return matchesSearch && matchesBrand && matchesStock;
     });
@@ -173,6 +182,17 @@ export function AdminProductList({
               }`}
             >
               Agotados
+            </button>
+            <button
+              type="button"
+              onClick={() => setStockFilter("lowStock")}
+              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all text-center ${
+                stockFilter === "lowStock"
+                  ? "bg-white text-amber-700 shadow-sm"
+                  : "text-smoke hover:text-ink"
+              }`}
+            >
+              Bajo Stock
             </button>
           </div>
         </div>

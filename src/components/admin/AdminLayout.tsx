@@ -194,6 +194,36 @@ export function AdminLayout({
 
           <button
             type="button"
+            onClick={() => setActiveTab("categories")}
+            className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-lg text-xs font-semibold tracking-wide transition-all ${
+              activeTab === "categories"
+                ? "bg-ink text-gold-400 border-l-4 border-gold-500 pl-2.5"
+                : "text-smoke hover:text-bone hover:bg-ink/40"
+            }`}
+          >
+            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10M7 12h10M7 17h10" />
+            </svg>
+            Categorías y Marcas
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("coupons")}
+            className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-lg text-xs font-semibold tracking-wide transition-all ${
+              activeTab === "coupons"
+                ? "bg-ink text-gold-400 border-l-4 border-gold-500 pl-2.5"
+                : "text-smoke hover:text-bone hover:bg-ink/40"
+            }`}
+          >
+            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+            </svg>
+            Cupones
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab("hero")}
             className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-lg text-xs font-semibold tracking-wide transition-all ${
               activeTab === "hero"

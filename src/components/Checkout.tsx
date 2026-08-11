@@ -7,6 +7,8 @@ import {
   type CustomerSnapshot,
 } from "../lib/customerSession";
 import { sendCustomerMagicLink } from "../lib/auth-customer";
+import { validateCoupon, calculateDiscount, type Coupon } from "../lib/coupons";
+import { OrderSuccess } from "./OrderSuccess";
 import { Arrow, Close, Minus, Plus } from "./ui";
 
 type FieldKey = "name" | "phone" | "email" | "address" | "notes";
@@ -21,13 +23,11 @@ const EMPTY_FORM: FormState = {
 };
 
 const PHONE_REGEX = /^[+()\d\s-]{8,20}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function buildLineInputs(
   lines: ReturnType<typeof useStore>["lines"],
 ) {
-  // Group lines by (productId, variant or size) so each variant becomes its
-  // own order_item with its own qty. We pass through the variant object
-  // (id, label, image) so the snapshot persists in order_items.
   const groups = new Map<
     string,
     {
@@ -70,9 +70,18 @@ export function Checkout({ onExit }: { onExit: () => void }) {
   const [result, setResult] = useState<SubmitOrderResult | null>(null);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
 
+  // Cupón de descuento
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+
+  const discountAmount = calculateDiscount(total, appliedCoupon);
+  const finalTotal = Math.max(0, total - discountAmount);
+
   const lineInputs = useMemo(() => buildLineInputs(lines), [lines]);
 
-  // email prefilled if a magic-link user is signed in
+  // Autofill email si el cliente ya está autenticado
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -91,11 +100,15 @@ export function Checkout({ onExit }: { onExit: () => void }) {
     setForm((p) => ({ ...p, [k]: v }));
   };
 
-  const phoneClean = form.phone.replace(/\s/g, "");
   const nameClean = form.name.trim();
+  const phoneClean = form.phone.replace(/\s/g, "");
+  const emailClean = form.email.trim();
+
+  // El email es AHORA OBLIGATORIO para realizar el seguimiento del pedido
   const canSubmit =
     !!nameClean &&
     PHONE_REGEX.test(phoneClean) &&
+    EMAIL_REGEX.test(emailClean) &&
     form.address.trim().length >= 5 &&
     !submitting &&
     lineInputs.length > 0;
@@ -110,7 +123,7 @@ export function Checkout({ onExit }: { onExit: () => void }) {
       customer: {
         name: nameClean,
         phone: phoneClean,
-        email: form.email.trim() || undefined,
+        email: emailClean,
         address: form.address.trim(),
         notes: form.notes.trim() || undefined,
       },
@@ -123,10 +136,10 @@ export function Checkout({ onExit }: { onExit: () => void }) {
         ...res.customer,
         name: nameClean,
         phone: phoneClean,
-        email: form.email.trim() || res.customer.email,
+        email: emailClean,
       };
       writeCustomerSession(customer);
-      notify("Pedido confirmado", "success", `Orden ${res.orderNumber}`);
+      notify("Pedido confirmado exitosamente", "success", `Orden ${res.orderNumber}`);
     }
 
     setResult(res);
@@ -134,12 +147,11 @@ export function Checkout({ onExit }: { onExit: () => void }) {
   };
 
   const handleSendMagicLink = async () => {
-    const email = form.email.trim();
-    if (!email) {
-      notify("Ingresá un email para enviar el link", "error");
+    if (!emailClean || !EMAIL_REGEX.test(emailClean)) {
+      notify("Ingresá un email válido para enviar el link de acceso", "error");
       return;
     }
-    const r = await sendCustomerMagicLink(email);
+    const r = await sendCustomerMagicLink(emailClean);
     if (r.ok) {
       setMagicLinkSent(true);
       notify(r.message, "success");
@@ -148,9 +160,36 @@ export function Checkout({ onExit }: { onExit: () => void }) {
     }
   };
 
+  const handleApplyCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!couponCode.trim()) return;
+    setValidatingCoupon(true);
+    setCouponError(null);
+
+    const res = await validateCoupon(couponCode);
+    setValidatingCoupon(false);
+    if (res.ok && res.coupon) {
+      setAppliedCoupon(res.coupon);
+      notify(`Cupón ${res.coupon.code} aplicado con éxito`, "success");
+    } else {
+      setCouponError(res.error || "Cupón no válido");
+      setAppliedCoupon(null);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError(null);
+  };
+
   if (result?.ok) {
     return (
-      <SuccessPanel orderNumber={result.orderNumber} total={result.total} onExit={onExit} />
+      <OrderSuccess
+        orderNumber={result.orderNumber}
+        orderId={result.orderId}
+        onExit={onExit}
+      />
     );
   }
 
@@ -204,12 +243,14 @@ export function Checkout({ onExit }: { onExit: () => void }) {
                   hint="Te escribimos acá para confirmar el pedido."
                 />
                 <Field
-                  label="Email (opcional)"
+                  label="Email"
+                  required
                   value={form.email}
                   onChange={(v) => updateField("email", v)}
-                  placeholder="para recordarte pedidos pasados"
+                  placeholder="tu@email.com (para seguimiento de tu pedido)"
                   type="email"
                   autoComplete="email"
+                  hint="Obligatorio para que puedas consultar el estado de tu pedido en Mi Cuenta."
                   rightSlot={
                     form.email.trim() && !magicLinkSent ? (
                       <button
@@ -347,14 +388,66 @@ export function Checkout({ onExit }: { onExit: () => void }) {
                       </div>
                     ))}
                   </div>
-                  <div className="border-t border-ink/8 px-5 py-4">
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-[13px] text-smoke">Subtotal</span>
-                      <span className="text-[20px] font-extrabold tracking-[-0.02em]">
-                        {uy(total)}
-                      </span>
+                  <div className="border-t border-ink/8 px-5 py-4 space-y-3">
+                    {/* Formulario de Cupón de Descuento */}
+                    {!appliedCoupon ? (
+                      <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                        <input
+                          type="text"
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                          placeholder="CÓDIGO DE CUPÓN"
+                          className="w-full border border-ink/15 bg-bone px-3 py-2 text-[11px] uppercase tracking-[0.14em] outline-none focus:border-ink"
+                        />
+                        <button
+                          type="submit"
+                          disabled={validatingCoupon || !couponCode.trim()}
+                          className="shrink-0 bg-ink px-4 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-bone disabled:opacity-50"
+                        >
+                          Aplicar
+                        </button>
+                      </form>
+                    ) : (
+                      <div className="flex items-center justify-between rounded-sm bg-emerald-50 p-2.5 text-[12px]">
+                        <div>
+                          <span className="font-bold text-emerald-800">
+                            Cupón {appliedCoupon.code}
+                          </span>
+                          <span className="ml-2 text-emerald-700">
+                            (-{appliedCoupon.discount_type === "percentage" ? `${appliedCoupon.discount_value}%` : uy(appliedCoupon.discount_value)})
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleRemoveCoupon}
+                          className="text-[11px] font-bold text-rose-600 hover:underline"
+                        >
+                          Quitar
+                        </button>
+                      </div>
+                    )}
+                    {couponError && (
+                      <p className="text-[11px] font-medium text-rose-600">{couponError}</p>
+                    )}
+
+                    <div className="space-y-1.5 pt-2 border-t border-ink/8">
+                      <div className="flex items-baseline justify-between text-[13px] text-smoke">
+                        <span>Subtotal</span>
+                        <span>{uy(total)}</span>
+                      </div>
+                      {discountAmount > 0 && (
+                        <div className="flex items-baseline justify-between text-[13px] font-semibold text-emerald-700">
+                          <span>Descuento cupón</span>
+                          <span>-{uy(discountAmount)}</span>
+                        </div>
+                      )}
+                      <div className="flex items-baseline justify-between pt-1 text-[16px] font-extrabold text-ink">
+                        <span>Total final</span>
+                        <span className="text-[20px]">{uy(finalTotal)}</span>
+                      </div>
                     </div>
-                    <p className="mt-1 text-[11.5px] text-smoke">
+
+                    <p className="pt-1 text-[11.5px] text-smoke">
                       Envío y pago coordinan por WhatsApp.
                     </p>
                   </div>

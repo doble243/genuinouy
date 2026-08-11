@@ -6,6 +6,8 @@ import { AdminProductFormModal } from "./AdminProductFormModal";
 import { AdminHeroManager } from "./AdminHeroManager";
 import { AdminOrdersList } from "./AdminOrdersList";
 import { AdminCustomersList } from "./AdminCustomersList";
+import { AdminCategoriesManager } from "./AdminCategoriesManager";
+import { AdminCouponsManager } from "./AdminCouponsManager";
 import type { AdminProduct, AdminTab } from "../../types/admin";
 import { useStore } from "../../lib/store";
 import { mapProductToAdminProduct } from "../../lib/adminProductMapper";
@@ -24,9 +26,6 @@ export function AdminPanel({ onExitAdmin }: { onExitAdmin?: () => void }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<AdminProduct | null>(null);
 
-  // Map store products from Supabase to AdminProduct format. Using a pure
-  // mapper so the variants array is preserved on edit (previously this
-  // mapping dropped `variants` and saving an existing product wiped them).
   const products: AdminProduct[] = storeProducts.map((p, index) =>
     mapProductToAdminProduct(p, index),
   );
@@ -114,6 +113,10 @@ export function AdminPanel({ onExitAdmin }: { onExitAdmin?: () => void }) {
         <AdminCustomersList />
       ) : activeTab === "hero" ? (
         <AdminHeroManager />
+      ) : activeTab === "categories" ? (
+        <AdminCategoriesManager />
+      ) : activeTab === "coupons" ? (
+        <AdminCouponsManager />
       ) : (
         <AdminProductList
           products={products}

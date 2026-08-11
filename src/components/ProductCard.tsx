@@ -125,16 +125,16 @@ export function ProductCard({
         </p>
       </div>
 
-      {/* Add móvil: quick add directo al carrito (no abre el modal) */}
+      {/* Add móvil: abre modal individual para exigir la selección de talle y variante */}
       <button
         type="button"
         onClick={(e) => {
           e.stopPropagation();
-          add(p, p.sizes[Math.floor(p.sizes.length / 2)]);
+          setSelectedProduct(p);
         }}
         className="mt-2 w-full border border-ink/12 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/80 transition-colors active:bg-ink active:text-bone md:hidden"
       >
-        Agregar
+        Seleccionar Talle
       </button>
     </article>
   );

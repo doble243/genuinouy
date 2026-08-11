@@ -53,12 +53,11 @@ export function ProductDetail() {
       .slice(0, 4);
   }, [product, products]);
 
-  // Either pick a variant (preferred when present) or a fallback size from
-  // the legacy sizes[] array. canAdd requires ONE of them.
+  // El talle (size) es SIEMPRE OBLIGATORIO al agregar al carrito.
   const canAdd =
     product !== null &&
     product.inStock !== false &&
-    (selectedVariant !== null || selectedSize !== null);
+    selectedSize !== null;
 
   const currentIndex = useMemo(() => {
     if (!product) return -1;
@@ -81,35 +80,36 @@ export function ProductDetail() {
 
   function handleAdd() {
     if (!product) return;
+    if (!selectedSize) {
+      notify("Por favor, seleccioná un talle antes de agregar al carrito", "error", "Talle Obligatorio");
+      return;
+    }
+
     if (selectedVariant) {
       add(
         product,
-        selectedVariant.value,
-        selectedVariant,
+        selectedSize,
+        {
+          ...selectedVariant,
+          label: `${selectedVariant.name} · Talle ${selectedSize}`,
+        },
       );
       notify(
-        `${product.name} (${selectedVariant.label}) agregado al carrito`,
-        "success",
-        "Carrito",
-      );
-    } else if (selectedSize) {
-      add(product, selectedSize);
-      notify(
-        `${product.name} (talle ${selectedSize}) agregado al carrito`,
+        `${product.name} (${selectedVariant.name} - Talle ${selectedSize}) agregado al carrito`,
         "success",
         "Carrito",
       );
     } else {
-      return;
+      add(product, selectedSize);
+      notify(
+        `${product.name} (Talle ${selectedSize}) agregado al carrito`,
+        "success",
+        "Carrito",
+      );
     }
     close();
   }
 
-  /**
-   * When a variant is selected, swap the main image to the variant photo
-   * (if assigned). This is what gives the customer visual confirmation
-   * they picked the right colorway / size.
-   */
   function pickVariant(v: ProductVariant) {
     setSelectedVariant(v);
     setActiveImage(v.image || activeImage || product?.image || null);
@@ -117,7 +117,6 @@ export function ProductDetail() {
 
   function pickSize(size: string) {
     setSelectedSize(size);
-    setSelectedVariant(null);
   }
 
   return (
@@ -292,11 +291,12 @@ export function ProductDetail() {
             </div>
 
             {/* Sticky bottom action area — always visible on mobile */}
-            <div className="shrink-0 border-t border-ink/8 bg-bone/95 px-5 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] backdrop-blur-md shadow-[0_-12px_28px_-18px_rgba(0,0,0,0.18)] md:px-7 md:pt-5">
-              {hasVariants ? (
-                <>
-                  <p className="mb-2.5 text-[10.5px] font-bold uppercase tracking-[0.2em] text-smoke">
-                    Variantes
+            <div className="shrink-0 border-t border-ink/8 bg-bone/95 px-5 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] backdrop-blur-md shadow-[0_-12px_28px_-18px_rgba(0,0,0,0.18)] md:px-7 md:pt-5 space-y-4">
+              {/* Color / Variante (si el producto tiene) */}
+              {hasVariants && (
+                <div>
+                  <p className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.2em] text-smoke">
+                    Color / Variante {selectedVariant ? `· ${selectedVariant.name}` : ""}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {product!.variants!.map((v) => {
@@ -309,7 +309,7 @@ export function ProductDetail() {
                           disabled={disabled}
                           onClick={() => pickVariant(v)}
                           title={disabled ? "Agotado" : v.label}
-                          className={`group flex items-center gap-2 border px-2.5 py-2 text-[12.5px] font-semibold tracking-[-0.01em] transition-colors duration-200 ${
+                          className={`group flex items-center gap-2 border px-2.5 py-1.5 text-[12px] font-semibold tracking-[-0.01em] transition-colors duration-200 ${
                             disabled
                               ? "cursor-not-allowed border-ink/8 bg-bone-200 text-smoke"
                               : isSelected
@@ -317,7 +317,7 @@ export function ProductDetail() {
                                 : "border-ink/15 bg-bone text-ink hover:border-ink"
                           }`}
                         >
-                          <span className="h-7 w-7 shrink-0 overflow-hidden bg-bone-300 border border-ink/10">
+                          <span className="h-6 w-6 shrink-0 overflow-hidden bg-bone-300 border border-ink/10">
                             {v.image ? (
                               <img
                                 src={v.image}
@@ -331,42 +331,50 @@ export function ProductDetail() {
                               </span>
                             )}
                           </span>
-                          <span className="font-bold">{v.label}</span>
+                          <span className="font-bold">{v.name || v.label}</span>
                         </button>
                       );
                     })}
                   </div>
-                </>
-              ) : (
-                <>
-                  <p className="mb-2.5 text-[10.5px] font-bold uppercase tracking-[0.2em] text-smoke">
-                    Talle
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {product.sizes.map((s) => {
-                      const isSelected = selectedSize === s;
-                      const disabled = product.inStock === false;
-                      return (
-                        <button
-                          key={s}
-                          type="button"
-                          disabled={disabled}
-                          onClick={() => pickSize(s)}
-                          className={`min-w-[52px] border px-3 py-2.5 text-[13px] font-semibold tracking-[-0.01em] transition-colors duration-200 ${
-                            disabled
-                              ? "cursor-not-allowed border-ink/8 bg-bone-200 text-smoke"
-                              : isSelected
-                              ? "border-gold-500 bg-gold-500 text-ink"
-                              : "border-ink/15 bg-bone text-ink hover:border-ink"
-                          }`}
-                        >
-                          {s}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </>
+                </div>
               )}
+
+              {/* Talle (Obligatorio siempre) */}
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-[10.5px] font-bold uppercase tracking-[0.2em] text-smoke">
+                    Talle <span className="text-rose-600 font-extrabold">*</span>
+                  </p>
+                  {!selectedSize && (
+                    <span className="text-[11px] font-bold text-rose-600 animate-pulse">
+                      (Seleccioná tu talle)
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {product.sizes.map((s) => {
+                    const isSelected = selectedSize === s;
+                    const disabled = product.inStock === false;
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => pickSize(s)}
+                        className={`min-w-[48px] border px-3 py-2 text-[12.5px] font-bold tracking-[-0.01em] transition-all duration-200 ${
+                          disabled
+                            ? "cursor-not-allowed border-ink/8 bg-bone-200 text-smoke"
+                            : isSelected
+                            ? "border-ink bg-ink text-bone shadow-sm"
+                            : "border-ink/15 bg-bone text-ink hover:border-ink"
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
               <div className="mt-4 flex gap-2">
                 <button

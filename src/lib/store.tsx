@@ -153,7 +153,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [addToast]
   );
 
-  // Carga inicial desde Supabase
+  // Carga inicial desde Supabase y auto-apertura por permalink (#p=id o #producto=id)
   useEffect(() => {
     async function loadProducts() {
       try {
@@ -169,6 +169,42 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
     loadProducts();
   }, []);
+
+  // Sync hash URL con el producto seleccionado para permalinks compartibles
+  const handleSetSelectedProduct = useCallback((p: Product | null) => {
+    setSelectedProduct(p);
+    if (typeof window !== "undefined") {
+      if (p) {
+        const currentHash = window.location.hash;
+        if (!currentHash.includes(`p=${p.id}`)) {
+          window.history.replaceState(null, "", `#p=${p.id}`);
+        }
+      } else {
+        if (window.location.hash.startsWith("#p=")) {
+          window.history.replaceState(null, "", window.location.pathname + window.location.search);
+        }
+      }
+    }
+  }, []);
+
+  // Detectar hash #p=ID al cargar o cambiar hash
+  useEffect(() => {
+    function checkHashProduct() {
+      if (typeof window === "undefined") return;
+      const hash = window.location.hash;
+      const match = hash.match(/^#p=([^&]+)/) || hash.match(/^#producto=([^&]+)/);
+      if (match && match[1]) {
+        const targetId = decodeURIComponent(match[1]);
+        const found = products.find((p) => p.id === targetId);
+        if (found) {
+          setSelectedProduct(found);
+        }
+      }
+    }
+    checkHashProduct();
+    window.addEventListener("hashchange", checkHashProduct);
+    return () => window.removeEventListener("hashchange", checkHashProduct);
+  }, [products]);
 
   // Recién llegados: todos los productos (los más recientes primero, ya vienen ordenados por created_at desc)
   const newArrivals = useMemo(() => products.slice(0, 12), [products]);
@@ -459,7 +495,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       removeToast,
       notify,
       selectedProduct,
-      setSelectedProduct,
+      setSelectedProduct: handleSetSelectedProduct,
       brandFilter,
       setBrandFilter,
     }),
