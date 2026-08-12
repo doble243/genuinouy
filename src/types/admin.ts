@@ -32,7 +32,8 @@ export type AdminTab =
   | "customers"
   | "hero"
   | "categories"
-  | "coupons";
+  | "coupons"
+  | "reviews";
 
 export type StoreOption = {
   id: string;

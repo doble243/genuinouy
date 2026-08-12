@@ -8,6 +8,7 @@ import { AdminOrdersList } from "./AdminOrdersList";
 import { AdminCustomersList } from "./AdminCustomersList";
 import { AdminCategoriesManager } from "./AdminCategoriesManager";
 import { AdminCouponsManager } from "./AdminCouponsManager";
+import { AdminReviewsManager } from "./AdminReviewsManager";
 import type { AdminProduct, AdminTab } from "../../types/admin";
 import { useStore } from "../../lib/store";
 import { mapProductToAdminProduct } from "../../lib/adminProductMapper";
@@ -117,6 +118,8 @@ export function AdminPanel({ onExitAdmin }: { onExitAdmin?: () => void }) {
         <AdminCategoriesManager />
       ) : activeTab === "coupons" ? (
         <AdminCouponsManager />
+      ) : activeTab === "reviews" ? (
+        <AdminReviewsManager />
       ) : (
         <AdminProductList
           products={products}
