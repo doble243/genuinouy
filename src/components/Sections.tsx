@@ -341,7 +341,7 @@ export function Brands() {
           </h2>
         </Reveal>
         <Reveal delay={80}>
-          <div className="mt-8 grid grid-cols-3 items-center gap-x-6 gap-y-8 sm:grid-cols-5 md:mt-10 lg:grid-cols-10">
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-8 md:mt-10">
             {brands.map((b) => (
               <a
                 key={b.slug}
