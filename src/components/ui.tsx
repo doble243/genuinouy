@@ -51,7 +51,7 @@ export function SectionHead({
       </div>
       {link && (
         <a
-          href="#"
+          href="#productos"
           className="group hidden shrink-0 items-center gap-1.5 text-[13px] font-semibold text-smoke transition-colors hover:text-ink sm:inline-flex"
         >
           {link}

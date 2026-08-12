@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useStore } from "../lib/store";
+import { storefrontWhatsappUrl } from "../lib/whatsapp";
 import { Bag, Close, Grid, Heart, Home, Menu, Search } from "./ui";
 
 const NAV = [
@@ -280,7 +281,30 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
             Panel Admin
           </a>
           <p className="font-semibold text-ink">Atención directa</p>
-          <p className="mt-1">WhatsApp · Instagram @genuinos.uy</p>
+          <div className="mt-1 flex items-center gap-3">
+            <a
+              href={
+                storefrontWhatsappUrl(
+                  "59891722213",
+                  "Hola! Quiero hacer una consulta sobre GENUINOS.",
+                ) ?? "#"
+              }
+              onClick={onClose}
+              className="inline-flex items-center gap-1.5 font-semibold text-ink underline decoration-ink/30 underline-offset-2 active:text-gold-600"
+            >
+              WhatsApp
+            </a>
+            <span className="text-ink/30">·</span>
+            <a
+              href="https://instagram.com/genuinos.uy"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={onClose}
+              className="inline-flex items-center gap-1.5 font-semibold text-ink underline decoration-ink/30 underline-offset-2 active:text-gold-600"
+            >
+              Instagram @genuinos.uy
+            </a>
+          </div>
           <p className="mt-3">Envíos a todo Uruguay · Pagá en cuotas</p>
         </div>
       </aside>

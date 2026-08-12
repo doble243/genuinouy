@@ -68,6 +68,20 @@ function waUrl(phone: string | null | undefined, text: string): string | null {
 }
 
 /**
+ * Storefront → store WhatsApp deep link (customer asking the store).
+ * Wraps the private `waUrl` helper so static storefront CTAs (footer,
+ * Cómo comprar, mobile menu) can build a `wa.me/<digits>?text=<msg>` link
+ * with the customer→store direction. Note: `genericWhatsappUrl` is the
+ * admin→customer direction and is NOT appropriate here.
+ */
+export function storefrontWhatsappUrl(
+  phone: string | null | undefined,
+  msg: string,
+): string | null {
+  return waUrl(phone, msg);
+}
+
+/**
  * Customer-facing message (used in /cuenta). Generic template — the customer
  * is asking, so we don't presume a status.
  */
