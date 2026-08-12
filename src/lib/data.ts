@@ -175,19 +175,30 @@ export const retroRunning: Product[] = [
 export const allProducts = [...newArrivals, ...mostWanted, ...retroRunning];
 
 export const brands = [
-  // Only brands with valid SimpleIcons slugs (no 404s on the icon CDN).
+  // Logos del marquee de marcas. La mayoría usan slugs de SimpleIcons
+  // (cdnsimpleicons.org). Las marcas que no existen en SimpleIcons (404)
+  // usan `img` con una URL directa de un logo SVG.
   // Converse/Vans/Asics removed because cdn.simpleicons.org returns 404 for
   // those slugs (verified 2026-08-06). Products with those brand values
   // still work — they appear in the AllProducts chip filter — they just
   // don't appear in the marquee carousel.
   { name: "Nike", slug: "nike" },
   { name: "Adidas", slug: "adidas" },
-  { name: "Jordan", slug: "jordan" },
-  { name: "New Balance", slug: "newbalance" },
   { name: "Puma", slug: "puma" },
-  { name: "Reebok", slug: "reebok" },
-  { name: "Under Armour", slug: "underarmour" },
-];
+  { name: "New Balance", slug: "newbalance" },
+  {
+    name: "Louis Vuitton",
+    slug: "louisvuitton",
+    img: "https://upload.wikimedia.org/wikipedia/commons/c/c3/Louis_Vuitton_Icon.svg",
+  },
+] as Brand[];
+
+export interface Brand {
+  name: string;
+  slug: string;
+  /** URL directa de un logo SVG cuando la marca no está en SimpleIcons. */
+  img?: string;
+}
 
 export const brandLogo = (slug: string, color = "1a1a1a") =>
   `https://cdn.simpleicons.org/${slug}/${color}`;

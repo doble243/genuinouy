@@ -350,7 +350,7 @@ export function Brands() {
                 className="group flex h-8 items-center justify-center"
               >
                 <img
-                  src={brandLogo(b.slug, "1a1a1a")}
+                  src={b.img ?? brandLogo(b.slug, "1a1a1a")}
                   alt={b.name}
                   loading="lazy"
                   decoding="async"
