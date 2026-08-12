@@ -55,10 +55,10 @@ export function ProductCard({
           }}
           aria-label={liked ? "Quitar de favoritos" : "Guardar en favoritos"}
           aria-pressed={liked}
-          className="absolute right-2 top-2 grid h-8 w-8 place-items-center text-ink/70 transition-colors hover:text-ink z-10"
+          className="absolute right-2 top-2 z-10 grid h-11 w-11 place-items-center text-ink/70 transition-colors hover:text-ink"
         >
           <Heart
-            className="h-[18px] w-[18px]"
+            className="h-5 w-5"
             fill={liked ? "currentColor" : "none"}
             style={liked ? { color: "var(--color-gold-600)" } : undefined}
           />

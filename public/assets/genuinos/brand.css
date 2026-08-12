@@ -6,16 +6,12 @@
   font-weight: 400;
 }
 
+/* Se mantiene --genuinos-serif: lo consume la clase .genuinos-display de
+   este mismo archivo (fuente display Bodoni). Las demás variables fueron
+   alias removidos tras verificar que no tenían referencias vivas. */
 :root {
-  --genuinos-forest: #3c5c48;
-  --genuinos-ink: #20231f;
-  --genuinos-paper: #fcfbf8;
-  --genuinos-line: color-mix(in srgb, var(--genuinos-forest) 16%, transparent);
   --genuinos-serif: "Genuinos Bodoni", "Bodoni FLF", Didot, Georgia, serif;
 }
-
-.genuinos-logo { display: block; height: auto; width: 100%; }
-.genuinos-brand { display: inline-flex; align-items: center; color: var(--genuinos-forest); }
 
 /* Header: never use the full lockup here. It is unreadable at navigation scale. */
 .genuinos-header-logo { width: clamp(8.75rem, 10vw, 10.5rem); flex: none; }

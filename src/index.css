@@ -18,6 +18,10 @@
   --color-gold-500: #c8a24a;
   --color-gold-600: #a8863a;
 
+  /* Identidad GENUINOS — alias de brand.css (el @font-face vive en el <link>) */
+  --color-forest: #3c5c48;
+  --font-display: "Genuinos Bodoni", "Bodoni FLF", Didot, Georgia, serif;
+
   /* Layout metrics */
   --header-h: 3.5rem;
   --tabbar-h: 3.75rem;
