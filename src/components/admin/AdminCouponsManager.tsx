@@ -49,7 +49,9 @@ export function AdminCouponsManager() {
 
     if (editingId) {
       // Modo edición: se actualiza el cupón existente y se reemplaza en su
-      // misma posición (sin reordenar la lista).
+      // misma posición (sin reordenar la lista). Si era un fallback local
+      // ("fb-") el servicio lo materializa en la DB con un id real, así que
+      // también matcheamos por código para no perder la fila en la lista.
       const existing = coupons.find((c) => c.id === editingId);
       const updated = await saveAdminCoupon({
         id: editingId,
@@ -59,7 +61,11 @@ export function AdminCouponsManager() {
         active: existing ? existing.active : true,
         min_purchase: minPurchase > 0 ? minPurchase : undefined,
       });
-      setCoupons((prev) => prev.map((c) => (c.id === editingId ? updated : c)));
+      setCoupons((prev) =>
+        prev.map((c) =>
+          c.id === editingId || c.code === updated.code ? updated : c
+        )
+      );
     } else {
       // Modo creación: el nuevo cupón se agrega al principio.
       const created = await saveAdminCoupon({
@@ -81,7 +87,13 @@ export function AdminCouponsManager() {
       ...coupon,
       active: !coupon.active,
     });
-    setCoupons((prev) => prev.map((c) => (c.id === coupon.id ? updated : c)));
+    // Match por id o código: si el cupón era un fallback local ("fb-") el
+    // servicio lo materializa con un id real y hay que actualizar por código.
+    setCoupons((prev) =>
+      prev.map((c) =>
+        c.id === coupon.id || c.code === updated.code ? updated : c
+      )
+    );
   };
 
   return (
