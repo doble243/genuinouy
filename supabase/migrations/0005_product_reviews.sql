@@ -18,10 +18,14 @@
 --   - anon: SELECT de filas approved = true únicamente
 --   - admin (profiles.role = 'admin'): ALL (select/insert/update/delete)
 --   - NO hay INSERT anónimo: las reseñas son admin-managed
+--
+-- NOTA TIPO product_id: la tabla products existente usa id text (verificado
+-- en prod vía anon-key probe + error 42804 al aplicar con uuid), así que la
+-- FK es text para matchear products.id — el código TS ya usa string.
 
 create table if not exists public.product_reviews (
   id                uuid primary key default gen_random_uuid(),
-  product_id        uuid not null references public.products(id) on delete cascade,
+  product_id        text not null references public.products(id) on delete cascade,
   customer_name     text not null,
   rating            smallint not null check (rating between 1 and 5),
   title             text,
