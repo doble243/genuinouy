@@ -21,6 +21,11 @@ import {
 import { fetchHeroSlides } from "../lib/heroService";
 import type { HeroSlide } from "../types/admin";
 import { resolveImageUrl } from "../lib/cloudinary";
+import { storefrontWhatsappUrl } from "../lib/whatsapp";
+
+/** Marcador de contenido borrador: todo copy nuevo requiere confirmación del dueño. */
+const DRAFT_BADGE =
+  "Borrador — texto a confirmar por el dueño";
 
 /* ============================ HERO ============================ */
 
@@ -477,19 +482,208 @@ export function MostWanted() {
 }
 
 /* ========================== CONFIANZA ========================== */
+const TRUST_TILES = [
+  { label: "Envíos a todo Uruguay", href: "#envios" },
+  { label: "Cambios por talle", href: "#cambios" },
+  { label: "Guía de talles", href: "#talles" },
+  { label: "Atención directa", href: "#contacto" },
+];
+
 export function Trust() {
   return (
     <section className="border-y border-ink/8">
       <div className="edge mx-auto max-w-[1600px] py-6">
         <Reveal>
-          <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-[11.5px] font-semibold uppercase tracking-[0.16em] text-smoke md:text-[12.5px]">
-            <span className="text-ink">Envíos a todo Uruguay</span>
-            <span className="text-gold-500">·</span>
-            <span className="text-ink">Pagos seguros</span>
-            <span className="text-gold-500">·</span>
-            <span className="text-ink">Atención directa</span>
-          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-center">
+            {TRUST_TILES.map((t, i) => (
+              <span
+                key={t.label}
+                className="flex items-center gap-x-6 gap-y-3"
+              >
+                {i > 0 && <span className="hidden text-gold-500 sm:inline">·</span>}
+                <a
+                  href={t.href}
+                  className="text-[11.5px] font-semibold uppercase tracking-[0.16em] text-ink transition-colors hover:text-gold-600 md:text-[12.5px]"
+                >
+                  {t.label}
+                </a>
+              </span>
+            ))}
+          </div>
         </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ========================= INFO (envíos/cambios/talles/cómo comprar) ========================= */
+const INFO_BLOCKS = [
+  {
+    id: "envios",
+    title: "Envíos",
+    body: "Hacemos envíos a todo Uruguay por agencia o cadetería. El costo depende de tu zona y lo coordinamos por WhatsApp al confirmar tu pedido. Los envíos salen desde Pando, Canelones.",
+  },
+  {
+    id: "cambios",
+    title: "Cambios",
+    body: "Aceptamos cambios por defecto y por talle. Tenés 5 días desde que recibís el par para coordinarlo por WhatsApp. Los championes deben estar sin uso y con la caja original.",
+  },
+  {
+    id: "talles",
+    title: "Guía de talles",
+    body: "Trabajamos con la medida media de cada modelo: la mayoría de los championes calzan talle estándar (equivale al talle que usás habitualmente). Ante dudas entre dos talles, recomendamos el más grande y te asesoramos por WhatsApp antes de comprar.",
+  },
+  {
+    id: "contacto",
+    title: "Cómo comprar",
+    body: "Elegí tu par, agregalo al carrito y completá tus datos. Te contactamos por WhatsApp para coordinar pago y entrega.",
+  },
+];
+
+export function StoreInfoSection() {
+  const [open, setOpen] = useState<string>(INFO_BLOCKS[0].id);
+
+  return (
+    <section id="info" className="bg-bone-200/50 py-14 md:py-24">
+      <div className="edge mx-auto max-w-[1600px]">
+        <Reveal>
+          <SectionHead title="Información útil" sub="Envios · Cambios · Talles" />
+        </Reveal>
+
+        <div className="mt-8 grid gap-3 md:mt-10">
+          {INFO_BLOCKS.map((b) => {
+            const isOpen = open === b.id;
+            return (
+              <Reveal key={b.id} delay={60}>
+                <div
+                  id={b.id}
+                  className="scroll-mt-[calc(var(--header-h)+1rem)] border border-ink/10 bg-bone"
+                >
+                  <button
+                    type="button"
+                    id={`heading-${b.id}`}
+                    aria-expanded={isOpen}
+                    aria-controls={`panel-${b.id}`}
+                    onClick={() => setOpen(isOpen ? "" : b.id)}
+                    className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left md:px-7"
+                  >
+                    <span className="text-[14px] font-bold tracking-[-0.01em] text-ink md:text-[16px]">
+                      {b.title}
+                    </span>
+                    <span
+                      className={`grid h-9 w-9 shrink-0 place-items-center rounded-full border transition-colors ${
+                        isOpen
+                          ? "border-gold-500 text-gold-600"
+                          : "border-ink/15 text-ink/60"
+                      }`}
+                      aria-hidden="true"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={1.8}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={`h-4 w-4 transition-transform duration-300 ${
+                          isOpen ? "rotate-180" : ""
+                        }`}
+                      >
+                        <path d="m6 9 6 6 6-6" />
+                      </svg>
+                    </span>
+                  </button>
+
+                  <div
+                    id={`panel-${b.id}`}
+                    role="region"
+                    aria-labelledby={`heading-${b.id}`}
+                    className={`grid transition-all duration-300 ease-[cubic-bezier(.22,1,.36,1)] ${
+                      isOpen
+                        ? "grid-rows-[1fr] opacity-100"
+                        : "grid-rows-[0fr] opacity-0"
+                    }`}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="border-t border-ink/8 px-5 pb-5 pt-4 md:px-7">
+                        <p className="text-[13.5px] leading-relaxed text-ink/75">
+                          {b.body}
+                        </p>
+                        {b.id === "contacto" && (
+                          <a
+                            href={
+                              storefrontWhatsappUrl(
+                                "+59891722213",
+                                "Hola! Quiero saber cómo comprar en GENUINOS.",
+                              ) ?? "#contacto"
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-4 inline-flex items-center gap-2 bg-ink px-5 py-3 text-[11.5px] font-bold uppercase tracking-[0.18em] text-bone transition-colors hover:bg-gold-500 hover:text-ink"
+                          >
+                            Hablar por WhatsApp
+                            <Arrow className="h-4 w-4" />
+                          </a>
+                        )}
+                        <p className="mt-4 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-gold-600">
+                          {DRAFT_BADGE}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ========================= SOBRE GENUINOS ========================= */
+export function BrandStorySection() {
+  return (
+    <section className="bg-[#3c5c48] py-14 text-bone md:py-24">
+      <div className="edge mx-auto max-w-[1600px]">
+        <div className="grid items-center gap-10 md:grid-cols-12">
+          <Reveal className="md:col-span-7">
+            <p className="mb-3 flex items-center gap-3 text-[10.5px] font-semibold uppercase tracking-[0.24em] text-bone/70">
+              <span className="h-px w-8 bg-gold-500" />
+              Sobre Genuinos
+            </p>
+            <h2 className="genuinos-display text-[34px] leading-[1.02] tracking-[-0.01em] md:text-[54px]">
+              ELEGÍ TU ESTILO
+            </h2>
+            <p className="mt-5 max-w-[520px] text-[14px] leading-relaxed text-bone/75 md:text-[15.5px]">
+              Genuinos nace en Pando, Uruguay, con una idea simple: championes
+              originales, seleccionados a mano y con stock real. Somos una
+              tienda multi-marca de reventa — traemos los pares que valen la
+              pena y los publicamos cuando están en nuestras manos.
+            </p>
+            <p className="mt-4 max-w-[520px] text-[14px] leading-relaxed text-bone/75 md:text-[15.5px]">
+              Sin fotos de catálogo, sin promesas vacías: lo que ves es lo que
+              hay, y te lo enviamos a todo Uruguay.
+            </p>
+            <p className="mt-5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-bone/50">
+              {DRAFT_BADGE}
+            </p>
+          </Reveal>
+
+          <Reveal delay={120} className="md:col-span-5">
+            <div className="ml-auto max-w-[380px] border border-bone/20 p-8 text-center md:p-10">
+              <p className="genuinos-display text-[64px] leading-none text-bone md:text-[84px]">
+                G
+              </p>
+              <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.24em] text-bone/70">
+                Pando · Uruguay
+              </p>
+              <p className="mt-2 text-[12px] text-bone/60">
+                Multi-marca de championes originales con stock real.
+              </p>
+            </div>
+          </Reveal>
+        </div>
       </div>
     </section>
   );
@@ -498,11 +692,14 @@ export function Trust() {
 /* ============================ FOOTER ============================ */
 const FOOT = [
   {
-    title: "Tienda",
-    links: ["Nuevos ingresos", "Championes", "Últimos pares", "Ofertas"],
+    title: "Ayuda",
+    links: [
+      { label: "Envíos", href: "#envios" },
+      { label: "Cambios", href: "#cambios" },
+      { label: "Guía de talles", href: "#talles" },
+      { label: "Contacto", href: "#contacto" },
+    ],
   },
-  { title: "Marcas", links: ["Nike", "Adidas", "Jordan", "New Balance"] },
-  { title: "Ayuda", links: ["Envíos", "Cambios", "Guía de talles", "Contacto"] },
 ];
 
 export function Footer() {
@@ -515,26 +712,30 @@ export function Footer() {
       />
       <div className="edge relative mx-auto max-w-[1600px]">
         <div className="grid gap-10 md:grid-cols-12">
-          <div className="md:col-span-4">
+          <div className="md:col-span-5">
             <div className="genuinos-lockup relative">
-            <img
-              src="/assets/genuinos/logo-full-white.svg"
-              alt="GENUINOS"
-              draggable={false}
-            />
-          </div>
+              <img
+                src="/assets/genuinos/logo-full-white.svg"
+                alt="GENUINOS"
+                draggable={false}
+              />
+            </div>
             <p className="mt-4 max-w-[280px] text-[13px] leading-relaxed text-bone/55">
               Championes originales seleccionados. Pando, Uruguay.
             </p>
             <div className="mt-6 flex gap-3">
               <a
-                href="#"
+                href="https://instagram.com/genuinos.uy"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="border border-bone/20 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] transition-colors hover:border-gold-500 hover:text-gold-400"
               >
                 Instagram
               </a>
               <a
-                href="#"
+                href="https://wa.me/59891722213"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="border border-bone/20 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] transition-colors hover:border-gold-500 hover:text-gold-400"
               >
                 WhatsApp
@@ -542,25 +743,49 @@ export function Footer() {
             </div>
           </div>
 
-          {FOOT.map((c) => (
-            <div key={c.title} className="md:col-span-2">
-              <h3 className="text-[10.5px] font-bold uppercase tracking-[0.2em] text-bone/45">
-                {c.title}
-              </h3>
-              <ul className="mt-4 space-y-2.5">
-                {c.links.map((l) => (
-                  <li key={l}>
-                    <a
-                      href="#"
-                      className="text-[13px] text-bone/75 transition-colors hover:text-bone"
-                    >
-                      {l}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <div className="md:col-span-3">
+            <h3 className="text-[10.5px] font-bold uppercase tracking-[0.2em] text-bone/45">
+              Ayuda
+            </h3>
+            <ul className="mt-4 space-y-2.5">
+              {FOOT[0].links.map((l) => (
+                <li key={l.label}>
+                  <a
+                    href={l.href}
+                    className="text-[13px] text-bone/75 transition-colors hover:text-bone"
+                  >
+                    {l.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="md:col-span-2">
+            <h3 className="text-[10.5px] font-bold uppercase tracking-[0.2em] text-bone/45">
+              Contacto
+            </h3>
+            <ul className="mt-4 space-y-2.5">
+              <li>
+                <a
+                  href="https://wa.me/59891722213"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[13px] text-bone/75 transition-colors hover:text-bone"
+                >
+                  WhatsApp
+                </a>
+              </li>
+              <li>
+                <a
+                  href="tel:+59891722213"
+                  className="text-[13px] text-bone/75 transition-colors hover:text-bone"
+                >
+                  +598 91 722 213
+                </a>
+              </li>
+            </ul>
+          </div>
 
           <div className="md:col-span-2">
             <h3 className="text-[10.5px] font-bold uppercase tracking-[0.2em] text-bone/45">
@@ -583,14 +808,6 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col gap-2 border-t border-bone/10 pt-6 text-[11.5px] text-bone/40 md:flex-row md:items-center md:justify-between">
           <p>© {new Date().getFullYear()} GENUINOS. Todos los derechos reservados.</p>
-          <p className="flex gap-5">
-            <a href="#" className="transition-colors hover:text-bone/70">
-              Términos
-            </a>
-            <a href="#" className="transition-colors hover:text-bone/70">
-              Privacidad
-            </a>
-          </p>
         </div>
       </div>
     </footer>

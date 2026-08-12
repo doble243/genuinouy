@@ -3,6 +3,7 @@ import { uy, type Product, type ProductVariant } from "../lib/data";
 import { useStore } from "../lib/store";
 import { ChevronLeft, ChevronRight, Close, Heart } from "./ui";
 import { ProductCard } from "./ProductCard";
+import { ReviewsSection } from "./reviews/ReviewsSection";
 
 export function ProductDetail() {
   const {
@@ -273,6 +274,11 @@ export function ProductDetail() {
                     {product.description}
                   </p>
                 )}
+              </div>
+
+              {/* Reseñas (aprobadas, con promedio) */}
+              <div className="px-5 pb-8 md:px-7">
+                <ReviewsSection productId={product.id} />
               </div>
 
               {/* Related */}

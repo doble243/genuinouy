@@ -3,14 +3,17 @@ import { Header } from "./components/Header";
 import { CartDrawer, SearchOverlay, WishDrawer } from "./components/Overlays";
 import {
   Brands,
+  BrandStorySection,
   Categories,
   Editorial,
   Footer,
   Hero,
   MostWanted,
   NewArrivals,
+  StoreInfoSection,
   Trust,
 } from "./components/Sections";
+import { ReviewsCarousel } from "./components/reviews/ReviewsCarousel";
 import { AllProducts } from "./components/AllProducts";
 import { ProductDetail } from "./components/ProductDetail";
 import { AdminGate } from "./components/admin/AdminGate";
@@ -70,6 +73,9 @@ export default function App() {
             <Brands />
             <Editorial />
             <MostWanted />
+            <ReviewsCarousel />
+            <BrandStorySection />
+            <StoreInfoSection />
             <Trust />
           </main>
           <Footer />
