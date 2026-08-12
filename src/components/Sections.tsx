@@ -196,7 +196,7 @@ export function Hero() {
 
   return (
     <section id="top" className="relative overflow-hidden bg-obsidian">
-      <div className="relative h-[78svh] min-h-[520px] w-full md:h-[86svh] md:min-h-[600px]">
+      <div className="relative h-[70svh] min-h-[440px] w-full md:h-[86svh] md:min-h-[600px]">
         {activeSlides.map((slide, i) => (
           <HeroSlideContent
             key={slide.id}
@@ -405,7 +405,7 @@ export function Editorial() {
             </p>
           </Reveal>
 
-          <Reveal delay={90} className="mt-8 grid grid-cols-3 gap-3 md:mt-10 md:gap-5">
+          <Reveal delay={90} className="mt-8 grid grid-cols-2 gap-3 md:mt-10 md:grid-cols-3 md:gap-5">
             {editorialProducts.map((p) => (
               <a key={p.id} href="#nuevos" className="group block">
                 <div className="overflow-hidden bg-obsidian-700">
@@ -417,7 +417,7 @@ export function Editorial() {
                     className="aspect-square w-full object-cover transition-transform duration-[800ms] ease-out group-hover:scale-[1.05]"
                   />
                 </div>
-                <p className="mt-3 text-[9.5px] font-semibold uppercase tracking-[0.18em] text-bone/45">
+                <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-bone/45">
                   {p.brand}
                 </p>
                 <h3 className="mt-0.5 line-clamp-2 text-[12.5px] font-semibold leading-snug md:text-[13.5px]">
@@ -644,7 +644,7 @@ export function StoreInfoSection() {
 /* ========================= SOBRE GENUINOS ========================= */
 export function BrandStorySection() {
   return (
-    <section className="bg-[#3c5c48] py-14 text-bone md:py-24">
+    <section className="bg-forest py-14 text-bone md:py-24">
       <div className="edge mx-auto max-w-[1600px]">
         <div className="grid items-center gap-10 md:grid-cols-12">
           <Reveal className="md:col-span-7">
@@ -652,7 +652,7 @@ export function BrandStorySection() {
               <span className="h-px w-8 bg-gold-500" />
               Sobre Genuinos
             </p>
-            <h2 className="genuinos-display text-[34px] leading-[1.02] tracking-[-0.01em] md:text-[54px]">
+            <h2 className="genuinos-display font-display text-[34px] leading-[1.02] tracking-[-0.01em] md:text-[54px]">
               ELEGÍ TU ESTILO
             </h2>
             <p className="mt-5 max-w-[520px] text-[14px] leading-relaxed text-bone/75 md:text-[15.5px]">
@@ -672,7 +672,7 @@ export function BrandStorySection() {
 
           <Reveal delay={120} className="md:col-span-5">
             <div className="ml-auto max-w-[380px] border border-bone/20 p-8 text-center md:p-10">
-              <p className="genuinos-display text-[64px] leading-none text-bone md:text-[84px]">
+              <p className="genuinos-display font-display text-[64px] leading-none text-bone md:text-[84px]">
                 G
               </p>
               <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.24em] text-bone/70">
