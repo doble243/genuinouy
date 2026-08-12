@@ -296,13 +296,13 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
             </a>
             <span className="text-ink/30">·</span>
             <a
-              href="https://instagram.com/genuinos.uy"
+              href="https://www.instagram.com/genuinosuyy/"
               target="_blank"
               rel="noopener noreferrer"
               onClick={onClose}
               className="inline-flex items-center gap-1.5 font-semibold text-ink underline decoration-ink/30 underline-offset-2 active:text-gold-600"
             >
-              Instagram @genuinos.uy
+              Instagram @genuinosuyy
             </a>
           </div>
           <p className="mt-3">Envíos a todo Uruguay · Pagá en cuotas</p>
