@@ -224,6 +224,21 @@ export function AdminLayout({
 
           <button
             type="button"
+            onClick={() => setActiveTab("reviews")}
+            className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-lg text-xs font-semibold tracking-wide transition-all ${
+              activeTab === "reviews"
+                ? "bg-ink text-gold-400 border-l-4 border-gold-500 pl-2.5"
+                : "text-smoke hover:text-bone hover:bg-ink/40"
+            }`}
+          >
+            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L2.976 10.1c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+            </svg>
+            Reseñas
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab("hero")}
             className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-lg text-xs font-semibold tracking-wide transition-all ${
               activeTab === "hero"
@@ -285,6 +300,8 @@ export function AdminLayout({
                   ? "Pedidos"
                   : activeTab === "customers"
                   ? "Clientes"
+                  : activeTab === "reviews"
+                  ? "Reseñas"
                   : activeTab === "hero"
                   ? "Hero / Carrusel"
                   : "Gestión de Productos"}
@@ -402,6 +419,22 @@ export function AdminLayout({
             <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
           <span className="text-[10px] tracking-tight">Clientes</span>
+        </button>
+
+        {/* Reseñas Button */}
+        <button
+          type="button"
+          onClick={() => setActiveTab("reviews")}
+          className={`flex flex-col items-center justify-center min-w-[64px] min-h-[48px] py-1 px-2 rounded-xl transition-all ${
+            activeTab === "reviews"
+              ? "text-gold-400 font-bold bg-white/5"
+              : "text-smoke hover:text-bone"
+          }`}
+        >
+          <svg className="w-5 h-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={activeTab === "reviews" ? 2.2 : 1.7}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L2.976 10.1c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          </svg>
+          <span className="text-[10px] tracking-tight">Reseñas</span>
         </button>
 
         {/* Hero Button */}
