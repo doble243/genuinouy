@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { useStore } from "../lib/store";
-import { storefrontWhatsappUrl } from "../lib/whatsapp";
+import {
+  storefrontWhatsappUrl,
+  STORE_PHONE,
+  STORE_GREETING,
+} from "../lib/whatsapp";
 import { Bag, Close, Grid, Heart, Home, Menu, Search } from "./ui";
 
 const NAV = [
@@ -285,8 +289,8 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
             <a
               href={
                 storefrontWhatsappUrl(
-                  "59891722213",
-                  "Hola! Quiero hacer una consulta sobre GENUINOS.",
+                  STORE_PHONE,
+                  STORE_GREETING,
                 ) ?? "#"
               }
               onClick={onClose}

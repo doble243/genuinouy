@@ -21,7 +21,11 @@ import {
 import { fetchHeroSlides } from "../lib/heroService";
 import type { HeroSlide } from "../types/admin";
 import { resolveImageUrl } from "../lib/cloudinary";
-import { storefrontWhatsappUrl } from "../lib/whatsapp";
+import {
+  storefrontWhatsappUrl,
+  STORE_PHONE,
+  STORE_GREETING,
+} from "../lib/whatsapp";
 
 /** Marcador de contenido borrador: todo copy nuevo requiere confirmación del dueño. */
 const DRAFT_BADGE =
@@ -613,7 +617,7 @@ export function StoreInfoSection() {
                           <a
                             href={
                               storefrontWhatsappUrl(
-                                "+59891722213",
+                                STORE_PHONE,
                                 "Hola! Quiero saber cómo comprar en GENUINOS.",
                               ) ?? "#contacto"
                             }
@@ -733,7 +737,12 @@ export function Footer() {
                 Instagram
               </a>
               <a
-                href="https://wa.me/59891722213"
+                href={
+                  storefrontWhatsappUrl(
+                    STORE_PHONE,
+                    STORE_GREETING,
+                  ) ?? "#"
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="border border-bone/20 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] transition-colors hover:border-gold-500 hover:text-gold-400"
@@ -768,7 +777,12 @@ export function Footer() {
             <ul className="mt-4 space-y-2.5">
               <li>
                 <a
-                  href="https://wa.me/59891722213"
+                  href={
+                    storefrontWhatsappUrl(
+                      STORE_PHONE,
+                      STORE_GREETING,
+                    ) ?? "#"
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[13px] text-bone/75 transition-colors hover:text-bone"

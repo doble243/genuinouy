@@ -32,7 +32,7 @@ export type DbReviewRow = {
 /**
  * Mapea una fila de la base de datos Supabase al tipo Review de la UI.
  */
-export function mapDbToReview(item: DbReviewRow | any): Review {
+export function mapDbToReview(item: DbReviewRow): Review {
   return {
     id: String(item.id),
     product_id: String(item.product_id || ""),

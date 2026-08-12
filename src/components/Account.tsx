@@ -427,17 +427,14 @@ export function Account({ onExit }: { onExit: () => void }) {
         )}
 
         <section className="border-t border-ink/8 pt-6">
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              onExit();
-            }}
-            className="inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.16em] text-ink hover:text-obsidian"
+          <button
+            type="button"
+            onClick={onExit}
+            className="inline-flex cursor-pointer items-center gap-2 text-[12px] font-bold uppercase tracking-[0.16em] text-ink hover:text-obsidian"
           >
             <Arrow className="h-4 w-4 rotate-180" />
             Seguir viendo la tienda
-          </a>
+          </button>
         </section>
       </main>
 

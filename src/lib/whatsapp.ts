@@ -74,6 +74,14 @@ function waUrl(phone: string | null | undefined, text: string): string | null {
  * with the customer→store direction. Note: `genericWhatsappUrl` is the
  * admin→customer direction and is NOT appropriate here.
  */
+
+/** Canonical store phone (customer→store direction) for storefront CTAs. */
+export const STORE_PHONE = "+59891722213";
+
+/** Canonical storefront greeting used by static CTAs (footer, menu, info). */
+export const STORE_GREETING =
+  "Hola! Quiero hacer una consulta sobre GENUINOS.";
+
 export function storefrontWhatsappUrl(
   phone: string | null | undefined,
   msg: string,
