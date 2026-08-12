@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   fetchCategories,
   fetchBrands,
@@ -7,8 +7,10 @@ import {
   type CategoryItem,
   type BrandItem,
 } from "../../lib/categoriesService";
+import { useStore } from "../../lib/store";
 
 export function AdminCategoriesManager() {
+  const { products } = useStore();
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [brands, setBrands] = useState<BrandItem[]>([]);
   const [catName, setCatName] = useState("");
@@ -16,6 +18,27 @@ export function AdminCategoriesManager() {
   const [brandName, setBrandName] = useState("");
   const [savingCat, setSavingCat] = useState(false);
   const [savingBrand, setSavingBrand] = useState(false);
+
+  // Marcas reales: valores únicos no vacíos de `brand` en los productos cargados.
+  const catalogBrands = useMemo(() => {
+    return Array.from(
+      new Set(products.map((p) => p.brand).filter((b): b is string => Boolean(b)))
+    ).sort((a, b) => a.localeCompare(b));
+  }, [products]);
+
+  // Categorías reales (modelos): valores únicos no vacíos de `category` en los
+  // productos cargados, excluyendo el flag "Nuevos Ingresos". Se conservan TODOS
+  // los demás valores (incluso si coinciden con marcas, ej. "Adidas") — esta es
+  // la vista admin del catálogo real, no el filtro de la tienda.
+  const catalogCategories = useMemo(() => {
+    return Array.from(
+      new Set(
+        products.map((p) => p.category).filter((c): c is string => Boolean(c))
+      )
+    )
+      .filter((c) => c !== "Nuevos Ingresos")
+      .sort((a, b) => a.localeCompare(b));
+  }, [products]);
 
   const loadData = async () => {
     const cats = await fetchCategories();
@@ -133,6 +156,62 @@ export function AdminCategoriesManager() {
                 {b.name}
               </span>
             ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Catálogo real derivado de los productos cargados en la tienda */}
+      <div className="rounded-sm border border-ink/10 bg-white p-6 shadow-sm">
+        <h2 className="text-[16px] font-bold uppercase tracking-[0.12em] text-ink">
+          Catálogo real
+        </h2>
+        <p className="mt-1 text-[12px] text-smoke">
+          Derivado de los productos cargados — no editable acá.
+        </p>
+
+        <div className="mt-5 grid gap-6 lg:grid-cols-2">
+          <div>
+            <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-smoke">
+              Categorías del catálogo ({catalogCategories.length})
+            </h3>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {catalogCategories.length === 0 ? (
+                <p className="text-[12px] text-smoke">
+                  No hay categorías en los productos cargados.
+                </p>
+              ) : (
+                catalogCategories.map((c) => (
+                  <span
+                    key={c}
+                    className="border border-ink/10 bg-bone-200/60 px-3 py-1.5 text-[12px] font-semibold text-smoke"
+                  >
+                    {c}
+                  </span>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-smoke">
+              Marcas del catálogo ({catalogBrands.length})
+            </h3>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {catalogBrands.length === 0 ? (
+                <p className="text-[12px] text-smoke">
+                  No hay marcas en los productos cargados.
+                </p>
+              ) : (
+                catalogBrands.map((b) => (
+                  <span
+                    key={b}
+                    className="border border-ink/10 bg-bone-200/60 px-3 py-1.5 text-[12px] font-semibold text-smoke"
+                  >
+                    {b}
+                  </span>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>

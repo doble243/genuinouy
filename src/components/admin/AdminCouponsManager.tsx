@@ -13,6 +13,7 @@ export function AdminCouponsManager() {
   const [value, setValue] = useState<number>(10);
   const [minPurchase, setMinPurchase] = useState<number>(0);
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const loadCoupons = async () => {
     const list = await listAdminCoupons();
@@ -23,21 +24,55 @@ export function AdminCouponsManager() {
     loadCoupons();
   }, []);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  // Vuelve el formulario al modo de creación (valores por defecto).
+  const resetForm = () => {
+    setCode("");
+    setType("percentage");
+    setValue(10);
+    setMinPurchase(0);
+    setEditingId(null);
+  };
+
+  // Carga los valores del cupón seleccionado en el formulario para editarlo.
+  const handleEdit = (coupon: Coupon) => {
+    setEditingId(coupon.id);
+    setCode(coupon.code);
+    setType(coupon.discount_type);
+    setValue(coupon.discount_value);
+    setMinPurchase(coupon.min_purchase ?? 0);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!code.trim() || value <= 0) return;
     setSaving(true);
-    const created = await saveAdminCoupon({
-      code: code.trim().toUpperCase(),
-      discount_type: type,
-      discount_value: value,
-      active: true,
-      min_purchase: minPurchase > 0 ? minPurchase : undefined,
-    });
-    setCoupons((prev) => [created, ...prev]);
-    setCode("");
-    setValue(10);
-    setMinPurchase(0);
+
+    if (editingId) {
+      // Modo edición: se actualiza el cupón existente y se reemplaza en su
+      // misma posición (sin reordenar la lista).
+      const existing = coupons.find((c) => c.id === editingId);
+      const updated = await saveAdminCoupon({
+        id: editingId,
+        code: code.trim().toUpperCase(),
+        discount_type: type,
+        discount_value: value,
+        active: existing ? existing.active : true,
+        min_purchase: minPurchase > 0 ? minPurchase : undefined,
+      });
+      setCoupons((prev) => prev.map((c) => (c.id === editingId ? updated : c)));
+    } else {
+      // Modo creación: el nuevo cupón se agrega al principio.
+      const created = await saveAdminCoupon({
+        code: code.trim().toUpperCase(),
+        discount_type: type,
+        discount_value: value,
+        active: true,
+        min_purchase: minPurchase > 0 ? minPurchase : undefined,
+      });
+      setCoupons((prev) => [created, ...prev]);
+    }
+
+    resetForm();
     setSaving(false);
   };
 
@@ -59,13 +94,13 @@ export function AdminCouponsManager() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
-        {/* Formulario de Creación */}
+        {/* Formulario de Creación / Edición */}
         <div className="lg:col-span-1 border border-ink/10 bg-white p-6 shadow-sm rounded-sm">
           <h2 className="text-[16px] font-bold uppercase tracking-[0.12em] text-ink">
-            Nuevo Cupón
+            {editingId ? "Editar Cupón" : "Nuevo Cupón"}
           </h2>
 
-          <form onSubmit={handleCreate} className="mt-4 space-y-4">
+          <form onSubmit={handleSubmit} className="mt-4 space-y-4">
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-[0.14em] text-smoke mb-1">
                 Código del Cupón
@@ -122,13 +157,25 @@ export function AdminCouponsManager() {
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={saving || !code.trim() || value <= 0}
-              className="w-full bg-ink py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-bone hover:bg-obsidian disabled:opacity-50"
-            >
-              Crear Cupón
-            </button>
+            <div className="space-y-2">
+              <button
+                type="submit"
+                disabled={saving || !code.trim() || value <= 0}
+                className="w-full bg-ink py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-bone hover:bg-obsidian disabled:opacity-50"
+              >
+                {editingId ? "Guardar Cambios" : "Crear Cupón"}
+              </button>
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  disabled={saving}
+                  className="w-full border border-ink/20 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-ink hover:bg-bone disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+              )}
+            </div>
           </form>
         </div>
 
@@ -165,8 +212,17 @@ export function AdminCouponsManager() {
                   </span>
                   <button
                     type="button"
+                    onClick={() => handleEdit(c)}
+                    disabled={saving}
+                    className="text-[11px] font-bold text-ink underline underline-offset-2 hover:text-gold-600 disabled:opacity-40"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => toggleCouponStatus(c)}
-                    className="text-[11px] font-bold text-ink underline underline-offset-2 hover:text-gold-600"
+                    disabled={saving}
+                    className="text-[11px] font-bold text-ink underline underline-offset-2 hover:text-gold-600 disabled:opacity-40"
                   >
                     {c.active ? "Desactivar" : "Activar"}
                   </button>
