@@ -27,10 +27,6 @@ import {
   STORE_GREETING,
 } from "../lib/whatsapp";
 
-/** Marcador de contenido borrador: todo copy nuevo requiere confirmación del dueño. */
-const DRAFT_BADGE =
-  "Borrador — texto a confirmar por el dueño";
-
 /* ============================ HERO ============================ */
 
 // Slide por defecto: replica el hero estático original para que el sitio
@@ -629,9 +625,6 @@ export function StoreInfoSection() {
                             <Arrow className="h-4 w-4" />
                           </a>
                         )}
-                        <p className="mt-4 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-gold-600">
-                          {DRAFT_BADGE}
-                        </p>
                       </div>
                     </div>
                   </div>
@@ -668,9 +661,6 @@ export function BrandStorySection() {
             <p className="mt-4 max-w-[520px] text-[14px] leading-relaxed text-bone/75 md:text-[15.5px]">
               Sin fotos de catálogo, sin promesas vacías: lo que ves es lo que
               hay, y te lo enviamos a todo Uruguay.
-            </p>
-            <p className="mt-5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-bone/50">
-              {DRAFT_BADGE}
             </p>
           </Reveal>
 
