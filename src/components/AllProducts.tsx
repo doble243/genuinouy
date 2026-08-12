@@ -1,13 +1,30 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useStore } from "../lib/store";
 import { ProductCard } from "./ProductCard";
 import { Reveal, SectionHead } from "./ui";
+import { uy } from "../lib/data";
 
+/**
+ * Catálogo de productos con filtros unificados.
+ *
+ * Filtros disponibles: Modelo (derivado de `category` del CSV — columna
+ * "Categoría/Modelo"), Marca, Talle, Color y Precio máx.
+ *
+ * Nota de datos: la columna original mezcla marcas y el flag "Nuevos
+ * Ingresos" dentro de "Categoría". Para que los filtros no se repitan,
+ * "Modelo" excluye:
+ *   - cualquier valor que ya sea una marca (Adidas, LV, New Balance, …)
+ *   - el flag "Nuevos Ingresos" (no es un modelo)
+ * y así solo quedan los modelos reales (Campus, Samba, Dunk, …).
+ *
+ * En desktop los filtros son una grilla de selects uniformes (alineada);
+ * en mobile se abren en un bottom sheet con secciones plegables.
+ */
 export function AllProducts() {
   const { products, brandFilter, setBrandFilter } = useStore();
 
   // Estados de filtros adicionales
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [modelFilter, setModelFilter] = useState<string | null>(null);
   const [sizeFilter, setSizeFilter] = useState<string | null>(null);
   const [colorFilter, setColorFilter] = useState<string | null>(null);
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
@@ -18,10 +35,15 @@ export function AllProducts() {
     return Array.from(new Set(products.map((p) => p.brand))).filter(Boolean);
   }, [products]);
 
-  // Categorías únicas
-  const uniqueCategories = useMemo(() => {
-    return Array.from(new Set(products.map((p) => p.category))).filter(Boolean);
-  }, [products]);
+  // Modelos únicos: categorías del CSV menos marcas y el flag "Nuevos Ingresos".
+  const uniqueModels = useMemo(() => {
+    const brandSet = new Set(uniqueBrands);
+    return Array.from(
+      new Set(products.map((p) => p.category).filter((c): c is string => Boolean(c)))
+    )
+      .filter((cat) => cat !== "Nuevos Ingresos" && !brandSet.has(cat))
+      .sort((a, b) => a.localeCompare(b));
+  }, [products, uniqueBrands]);
 
   // Talles únicos disponibles en los productos
   const uniqueSizes = useMemo(() => {
@@ -61,14 +83,14 @@ export function AllProducts() {
   // Conteo de filtros activos
   const activeCount =
     (brandFilter ? 1 : 0) +
-    (categoryFilter ? 1 : 0) +
+    (modelFilter ? 1 : 0) +
     (sizeFilter ? 1 : 0) +
     (colorFilter ? 1 : 0) +
     (maxPrice !== null && maxPrice < highestPrice ? 1 : 0);
 
   const clearAllFilters = () => {
     setBrandFilter(null);
-    setCategoryFilter(null);
+    setModelFilter(null);
     setSizeFilter(null);
     setColorFilter(null);
     setMaxPrice(null);
@@ -78,7 +100,7 @@ export function AllProducts() {
   const filtered = useMemo(() => {
     return products.filter((p) => {
       if (brandFilter && p.brand !== brandFilter) return false;
-      if (categoryFilter && p.category !== categoryFilter) return false;
+      if (modelFilter && p.category !== modelFilter) return false;
       if (sizeFilter && (!p.sizes || !p.sizes.map(String).includes(sizeFilter))) return false;
       if (colorFilter) {
         const hasColor = p.variants?.some(
@@ -89,7 +111,7 @@ export function AllProducts() {
       if (maxPrice !== null && p.price > maxPrice) return false;
       return true;
     });
-  }, [products, brandFilter, categoryFilter, sizeFilter, colorFilter, maxPrice]);
+  }, [products, brandFilter, modelFilter, sizeFilter, colorFilter, maxPrice]);
 
   return (
     <section id="productos" className="py-14 md:py-24">
@@ -98,161 +120,30 @@ export function AllProducts() {
           <SectionHead title="Todos los productos" link="Ver nuevos" />
         </Reveal>
 
-        {/* Toolbar de Filtros */}
         <Reveal className="mt-6 md:mt-8">
-          {/* Botón de toggle en móvil */}
-          <div className="flex items-center justify-between gap-4 md:hidden">
-            <button
-              type="button"
-              onClick={() => setShowFiltersMobile((prev) => !prev)}
-              className="flex items-center gap-2 border border-ink/20 bg-bone px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em]"
-            >
-              <span>Filtros</span>
-              {activeCount > 0 && (
-                <span className="grid h-4 w-4 place-items-center rounded-full bg-gold-500 text-[10px] text-ink">
-                  {activeCount}
-                </span>
-              )}
-            </button>
-
-            {activeCount > 0 && (
-              <button
-                type="button"
-                onClick={clearAllFilters}
-                className="text-[11px] font-bold uppercase tracking-[0.14em] text-smoke hover:text-ink"
-              >
-                Limpiar ({activeCount})
-              </button>
-            )}
-          </div>
-
-          {/* Panel de Filtros completo */}
-          <div
-            className={`mt-4 space-y-4 border-y border-ink/10 py-5 transition-all md:block ${
-              showFiltersMobile ? "block" : "hidden md:block"
-            }`}
-          >
-            {/* Fila 1: Marcas y Categorías */}
-            <div className="flex flex-wrap items-center gap-4">
-              {/* Categorías */}
-              {uniqueCategories.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-smoke">
-                    Categoría:
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    <Chip
-                      active={categoryFilter === null}
-                      onClick={() => setCategoryFilter(null)}
-                    >
-                      Todas
-                    </Chip>
-                    {uniqueCategories.map((cat) => (
-                      <Chip
-                        key={cat}
-                        active={categoryFilter === cat}
-                        onClick={() => setCategoryFilter(cat)}
-                      >
-                        {cat}
-                      </Chip>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Marcas */}
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-smoke">
-                  Marca:
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  <Chip
-                    active={brandFilter === null}
-                    onClick={() => setBrandFilter(null)}
-                  >
-                    Todas
-                  </Chip>
-                  {uniqueBrands.map((brand) => (
-                    <Chip
-                      key={brand}
-                      active={brandFilter === brand}
-                      onClick={() => setBrandFilter(brand)}
-                    >
-                      {brand}
-                    </Chip>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Fila 2: Talles, Colores y Precio */}
-            <div className="flex flex-wrap items-center justify-between gap-4 pt-3">
-              <div className="flex flex-wrap items-center gap-4">
-                {/* Talles */}
-                {uniqueSizes.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-smoke">
-                      Talle:
-                    </span>
-                    <div className="flex flex-wrap gap-1">
-                      <Chip
-                        active={sizeFilter === null}
-                        onClick={() => setSizeFilter(null)}
-                      >
-                        Todos
-                      </Chip>
-                      {uniqueSizes.map((s) => (
-                        <Chip
-                          key={s}
-                          active={sizeFilter === s}
-                          onClick={() => setSizeFilter(s)}
-                        >
-                          {s}
-                        </Chip>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Colores */}
-                {uniqueColors.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-smoke">
-                      Color:
-                    </span>
-                    <div className="flex flex-wrap gap-1">
-                      <Chip
-                        active={colorFilter === null}
-                        onClick={() => setColorFilter(null)}
-                      >
-                        Todos
-                      </Chip>
-                      {uniqueColors.map((c) => (
-                        <Chip
-                          key={c}
-                          active={colorFilter === c}
-                          onClick={() => setColorFilter(c)}
-                        >
-                          {c}
-                        </Chip>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Botón Reset en desktop */}
-              {activeCount > 0 && (
-                <button
-                  type="button"
-                  onClick={clearAllFilters}
-                  className="hidden text-[11px] font-bold uppercase tracking-[0.14em] text-smoke hover:text-ink md:block"
-                >
-                  Limpiar filtros ({activeCount})
-                </button>
-              )}
-            </div>
-          </div>
+          <ProductFilters
+            uniqueBrands={uniqueBrands}
+            uniqueModels={uniqueModels}
+            uniqueSizes={uniqueSizes}
+            uniqueColors={uniqueColors}
+            highestPrice={highestPrice}
+            activeCount={activeCount}
+            filteredCount={filtered.length}
+            brandFilter={brandFilter}
+            modelFilter={modelFilter}
+            sizeFilter={sizeFilter}
+            colorFilter={colorFilter}
+            maxPrice={maxPrice}
+            showMobile={showFiltersMobile}
+            onToggleMobile={() => setShowFiltersMobile((prev) => !prev)}
+            onCloseMobile={() => setShowFiltersMobile(false)}
+            onBrandChange={setBrandFilter}
+            onModelChange={setModelFilter}
+            onSizeChange={setSizeFilter}
+            onColorChange={setColorFilter}
+            onMaxPriceChange={setMaxPrice}
+            onClearAll={clearAllFilters}
+          />
         </Reveal>
 
         {/* Listado o mensaje de filtro vacío */}
@@ -284,7 +175,488 @@ export function AllProducts() {
   );
 }
 
-function Chip({
+/* =====================================================================
+ * Filtros
+ * ===================================================================== */
+
+type ProductFiltersProps = {
+  uniqueBrands: string[];
+  uniqueModels: string[];
+  uniqueSizes: string[];
+  uniqueColors: string[];
+  highestPrice: number;
+  activeCount: number;
+  filteredCount: number;
+  brandFilter: string | null;
+  modelFilter: string | null;
+  sizeFilter: string | null;
+  colorFilter: string | null;
+  maxPrice: number | null;
+  showMobile: boolean;
+  onToggleMobile: () => void;
+  onCloseMobile: () => void;
+  onBrandChange: (v: string | null) => void;
+  onModelChange: (v: string | null) => void;
+  onSizeChange: (v: string | null) => void;
+  onColorChange: (v: string | null) => void;
+  onMaxPriceChange: (v: number | null) => void;
+  onClearAll: () => void;
+};
+
+function ProductFilters(props: ProductFiltersProps) {
+  const {
+    uniqueBrands,
+    uniqueModels,
+    uniqueSizes,
+    uniqueColors,
+    highestPrice,
+    activeCount,
+    filteredCount,
+    brandFilter,
+    modelFilter,
+    sizeFilter,
+    colorFilter,
+    maxPrice,
+    showMobile,
+    onToggleMobile,
+    onCloseMobile,
+    onBrandChange,
+    onModelChange,
+    onSizeChange,
+    onColorChange,
+    onMaxPriceChange,
+    onClearAll,
+  } = props;
+
+  // Opciones de precio: cortes redondeados hasta el máximo real.
+  const priceOptions = useMemo(() => {
+    if (highestPrice <= 0) return [] as number[];
+    const step = highestPrice > 20000 ? 5000 : highestPrice > 10000 ? 3000 : 1500;
+    const out: number[] = [];
+    for (let p = step; p < highestPrice; p += step) out.push(p);
+    return out;
+  }, [highestPrice]);
+
+  // Formato de precio compartido con el resto de la app (src/lib/data.ts).
+  const formatPrice = uy;
+
+  return (
+    <>
+      {/* ===== Desktop: grilla de selects uniformes ===== */}
+      <div className="hidden gap-3 md:grid md:grid-cols-2 lg:grid-cols-5">
+        <FilterSelect
+          label="Modelo"
+          value={modelFilter ?? ""}
+          onChange={(v) => onModelChange(v || null)}
+          options={uniqueModels}
+          placeholder="Todos"
+        />
+        <FilterSelect
+          label="Marca"
+          value={brandFilter ?? ""}
+          onChange={(v) => onBrandChange(v || null)}
+          options={uniqueBrands}
+          placeholder="Todas"
+        />
+        <FilterSelect
+          label="Talle"
+          value={sizeFilter ?? ""}
+          onChange={(v) => onSizeChange(v || null)}
+          options={uniqueSizes}
+          placeholder="Todos"
+        />
+        <FilterSelect
+          label="Color"
+          value={colorFilter ?? ""}
+          onChange={(v) => onColorChange(v || null)}
+          options={uniqueColors}
+          placeholder="Todos"
+        />
+        <FilterSelect
+          label="Precio máx."
+          value={maxPrice === null ? "" : String(maxPrice)}
+          onChange={(v) => onMaxPriceChange(v ? Number(v) : null)}
+          options={priceOptions.map(String)}
+          placeholder="Sin límite"
+          formatOption={(v) => formatPrice(Number(v))}
+        />
+        {activeCount > 0 && (
+          <div className="col-span-full mt-1 flex justify-end">
+            <button
+              type="button"
+              onClick={onClearAll}
+              className="text-[11px] font-bold uppercase tracking-[0.14em] text-smoke hover:text-ink"
+            >
+              Limpiar filtros ({activeCount})
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ===== Mobile: botón + bottom sheet ===== */}
+      <div className="md:hidden">
+        <div className="flex items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={onToggleMobile}
+            className="flex items-center gap-2 border border-ink/20 bg-bone px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em]"
+          >
+            <span>Filtros</span>
+            {activeCount > 0 && (
+              <span className="grid h-4 w-4 place-items-center rounded-full bg-gold-500 text-[10px] text-ink">
+                {activeCount}
+              </span>
+            )}
+          </button>
+
+          {activeCount > 0 && (
+            <button
+              type="button"
+              onClick={onClearAll}
+              className="text-[11px] font-bold uppercase tracking-[0.14em] text-smoke hover:text-ink"
+            >
+              Limpiar ({activeCount})
+            </button>
+          )}
+        </div>
+
+        {showMobile && (
+          <MobileFiltersSheet
+            uniqueBrands={uniqueBrands}
+            uniqueModels={uniqueModels}
+            uniqueSizes={uniqueSizes}
+            uniqueColors={uniqueColors}
+            priceOptions={priceOptions}
+            formatPrice={formatPrice}
+            activeCount={activeCount}
+            filteredCount={filteredCount}
+            brandFilter={brandFilter}
+            modelFilter={modelFilter}
+            sizeFilter={sizeFilter}
+            colorFilter={colorFilter}
+            maxPrice={maxPrice}
+            onBrandChange={onBrandChange}
+            onModelChange={onModelChange}
+            onSizeChange={onSizeChange}
+            onColorChange={onColorChange}
+            onMaxPriceChange={onMaxPriceChange}
+            onClearAll={onClearAll}
+            onClose={onCloseMobile}
+          />
+        )}
+      </div>
+    </>
+  );
+}
+
+/** Select nativo estilizado, uniforme para la grilla desktop. */
+function FilterSelect({
+  label,
+  value,
+  onChange,
+  options,
+  placeholder,
+  formatOption,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+  placeholder: string;
+  formatOption?: (v: string) => string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-smoke">
+        {label}
+      </span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-10 w-full border border-ink/15 bg-bone px-3 text-[12px] font-semibold text-ink outline-none transition-colors hover:border-ink/40 focus:border-ink"
+      >
+        <option value="">{placeholder}</option>
+        {options.map((o) => (
+          <option key={o} value={o}>
+            {formatOption ? formatOption(o) : o}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+/* ===================== Mobile bottom sheet ===================== */
+
+type SheetProps = {
+  uniqueBrands: string[];
+  uniqueModels: string[];
+  uniqueSizes: string[];
+  uniqueColors: string[];
+  priceOptions: number[];
+  formatPrice: (v: number) => string;
+  activeCount: number;
+  filteredCount: number;
+  brandFilter: string | null;
+  modelFilter: string | null;
+  sizeFilter: string | null;
+  colorFilter: string | null;
+  maxPrice: number | null;
+  onBrandChange: (v: string | null) => void;
+  onModelChange: (v: string | null) => void;
+  onSizeChange: (v: string | null) => void;
+  onColorChange: (v: string | null) => void;
+  onMaxPriceChange: (v: number | null) => void;
+  onClearAll: () => void;
+  onClose: () => void;
+};
+
+function MobileFiltersSheet(props: SheetProps) {
+  const {
+    uniqueBrands,
+    uniqueModels,
+    uniqueSizes,
+    uniqueColors,
+    priceOptions,
+    formatPrice,
+    activeCount,
+    filteredCount,
+    brandFilter,
+    modelFilter,
+    sizeFilter,
+    colorFilter,
+    maxPrice,
+    onBrandChange,
+    onModelChange,
+    onSizeChange,
+    onColorChange,
+    onMaxPriceChange,
+    onClearAll,
+    onClose,
+  } = props;
+
+  // Sección del acordeón abierta ("" = ninguna). Modelo abre por defecto.
+  const [open, setOpen] = useState<string>("modelo");
+
+  // Convención del repo (como lightbox/ui.tsx): lock del scroll del body y
+  // Escape cierra mientras el sheet está montado.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[80] md:hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Filtros de productos"
+    >
+      {/* Backdrop */}
+      <button
+        type="button"
+        aria-label="Cerrar filtros"
+        onClick={onClose}
+        className="absolute inset-0 h-full w-full bg-ink/50"
+      />
+
+      {/* Panel */}
+      <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto bg-bone">
+        <div className="flex items-center justify-between border-b border-ink/10 px-5 py-4">
+          <h3 className="text-[12px] font-bold uppercase tracking-[0.18em] text-ink">
+            Filtros
+            {activeCount > 0 && (
+              <span className="ml-2 text-gold-600">({activeCount})</span>
+            )}
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar"
+            className="grid h-8 w-8 place-items-center border border-ink/15 text-[13px] font-bold text-ink"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="px-5 py-4">
+          <SheetSection
+            id="modelo"
+            open={open}
+            onToggle={setOpen}
+            title="Modelo"
+          >
+            <div className="flex flex-wrap gap-1.5">
+              <SheetChip
+                active={modelFilter === null}
+                onClick={() => onModelChange(null)}
+              >
+                Todos
+              </SheetChip>
+              {uniqueModels.map((m) => (
+                <SheetChip
+                  key={m}
+                  active={modelFilter === m}
+                  onClick={() => onModelChange(m)}
+                >
+                  {m}
+                </SheetChip>
+              ))}
+            </div>
+          </SheetSection>
+
+          <SheetSection id="marca" open={open} onToggle={setOpen} title="Marca">
+            <div className="flex flex-wrap gap-1.5">
+              <SheetChip
+                active={brandFilter === null}
+                onClick={() => onBrandChange(null)}
+              >
+                Todas
+              </SheetChip>
+              {uniqueBrands.map((b) => (
+                <SheetChip
+                  key={b}
+                  active={brandFilter === b}
+                  onClick={() => onBrandChange(b)}
+                >
+                  {b}
+                </SheetChip>
+              ))}
+            </div>
+          </SheetSection>
+
+          <SheetSection id="talle" open={open} onToggle={setOpen} title="Talle">
+            <div className="flex flex-wrap gap-1.5">
+              <SheetChip
+                active={sizeFilter === null}
+                onClick={() => onSizeChange(null)}
+              >
+                Todos
+              </SheetChip>
+              {uniqueSizes.map((s) => (
+                <SheetChip
+                  key={s}
+                  active={sizeFilter === s}
+                  onClick={() => onSizeChange(s)}
+                >
+                  {s}
+                </SheetChip>
+              ))}
+            </div>
+          </SheetSection>
+
+          <SheetSection id="color" open={open} onToggle={setOpen} title="Color">
+            <div className="flex flex-wrap gap-1.5">
+              <SheetChip
+                active={colorFilter === null}
+                onClick={() => onColorChange(null)}
+              >
+                Todos
+              </SheetChip>
+              {uniqueColors.map((c) => (
+                <SheetChip
+                  key={c}
+                  active={colorFilter === c}
+                  onClick={() => onColorChange(c)}
+                >
+                  {c}
+                </SheetChip>
+              ))}
+            </div>
+          </SheetSection>
+
+          <SheetSection
+            id="precio"
+            open={open}
+            onToggle={setOpen}
+            title="Precio máximo"
+          >
+            <div className="flex flex-wrap gap-1.5">
+              <SheetChip
+                active={maxPrice === null}
+                onClick={() => onMaxPriceChange(null)}
+              >
+                Sin límite
+              </SheetChip>
+              {priceOptions.map((p) => (
+                <SheetChip
+                  key={p}
+                  active={maxPrice === p}
+                  onClick={() => onMaxPriceChange(p)}
+                >
+                  {formatPrice(p)}
+                </SheetChip>
+              ))}
+            </div>
+          </SheetSection>
+        </div>
+
+        <div className="flex items-center gap-3 border-t border-ink/10 px-5 py-4">
+          <button
+            type="button"
+            onClick={onClearAll}
+            className="h-12 flex-1 border border-ink/20 text-[11px] font-bold uppercase tracking-[0.14em] text-ink"
+          >
+            Limpiar
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-12 flex-[2] bg-ink text-[11px] font-bold uppercase tracking-[0.14em] text-bone"
+          >
+            Ver {filteredCount} productos
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Sección plegable del bottom sheet. */
+function SheetSection({
+  id,
+  open,
+  onToggle,
+  title,
+  children,
+}: {
+  id: string;
+  open: string;
+  onToggle: (id: string) => void;
+  title: string;
+  children: React.ReactNode;
+}) {
+  const isOpen = open === id;
+  return (
+    <div className="border-b border-ink/8 py-3">
+      <button
+        type="button"
+        onClick={() => onToggle(isOpen ? "" : id)}
+        className="flex w-full items-center justify-between py-1"
+        aria-expanded={isOpen}
+      >
+        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-ink">
+          {title}
+        </span>
+        <span className={`text-[10px] text-smoke transition-transform ${isOpen ? "rotate-180" : ""}`}>
+          ▼
+        </span>
+      </button>
+      {isOpen && <div className="mt-3">{children}</div>}
+    </div>
+  );
+}
+
+/** Chip compacto para el bottom sheet mobile. */
+function SheetChip({
   active,
   onClick,
   children,
